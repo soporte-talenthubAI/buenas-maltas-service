@@ -14,6 +14,8 @@ import {
   Loader2,
   CheckSquare,
   Square,
+  Filter,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -33,6 +35,12 @@ interface Order {
     phone: string | null;
   };
   _count: { items: number; documents: number };
+}
+
+interface Customer {
+  id: string;
+  commercial_name: string;
+  locality: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -57,18 +65,33 @@ interface PedidosTableProps {
 
 export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [customerFilter, setCustomerFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetch("/api/clientes")
+      .then((r) => r.json())
+      .then(setCustomers);
+  }, []);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (statusFilter) params.set("status", statusFilter);
+    if (customerFilter) params.set("customerId", customerFilter);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
     params.set("page", String(page));
     params.set("limit", "15");
 
@@ -76,8 +99,9 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
     const data = await res.json();
     setOrders(data.orders);
     setTotalPages(data.totalPages);
+    setTotal(data.total);
     setLoading(false);
-  }, [search, statusFilter, page]);
+  }, [search, statusFilter, customerFilter, dateFrom, dateTo, page]);
 
   useEffect(() => {
     fetchOrders();
@@ -100,57 +124,157 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
     }
   };
 
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setCustomerFilter("");
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  };
+
+  const hasActiveFilters =
+    search || statusFilter || customerFilter || dateFrom || dateTo;
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Pedidos</CardTitle>
-          {selected.size > 0 && onGenerateDocuments && (
+          <CardTitle>
+            Pedidos{" "}
+            <span className="text-sm font-normal text-gray-500">
+              ({total})
+            </span>
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {selected.size > 0 && onGenerateDocuments && (
+              <Button
+                size="sm"
+                onClick={() => onGenerateDocuments(Array.from(selected))}
+              >
+                <FileText className="w-4 h-4" />
+                Generar Docs ({selected.size})
+              </Button>
+            )}
             <Button
+              variant="outline"
               size="sm"
-              onClick={() => onGenerateDocuments(Array.from(selected))}
+              onClick={() => setShowFilters(!showFilters)}
             >
-              <FileText className="w-4 h-4" />
-              Generar Docs ({selected.size})
+              <Filter className="w-4 h-4" />
+              Filtros
             </Button>
-          )}
-        </div>
-        <div className="flex gap-3 mt-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Buscar por número o cliente..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="pl-10"
-            />
           </div>
-          <select
-            value={statusFilter}
+        </div>
+
+        {/* Search bar - always visible */}
+        <div className="relative mt-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Buscar por N° pedido o cliente..."
+            value={search}
             onChange={(e) => {
-              setStatusFilter(e.target.value);
+              setSearch(e.target.value);
               setPage(1);
             }}
-            className="h-9 rounded-md border border-gray-300 px-3 text-sm"
-          >
-            <option value="">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="documentado">Documentado</option>
-            <option value="en_ruta">En Ruta</option>
-            <option value="entregado">Entregado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
+            className="pl-10"
+          />
         </div>
+
+        {/* Extended filters */}
+        {showFilters && (
+          <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Estado
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full h-9 rounded-md border border-gray-300 px-3 text-sm"
+                >
+                  <option value="">Todos</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="confirmado">Confirmado</option>
+                  <option value="documentado">Documentado</option>
+                  <option value="en_ruta">En Ruta</option>
+                  <option value="entregado">Entregado</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Cliente
+                </label>
+                <select
+                  value={customerFilter}
+                  onChange={(e) => {
+                    setCustomerFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full h-9 rounded-md border border-gray-300 px-3 text-sm"
+                >
+                  <option value="">Todos</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.commercial_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Fecha desde
+                </label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => {
+                    setDateFrom(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full h-9 rounded-md border border-gray-300 px-3 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">
+                  Fecha hasta
+                </label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => {
+                    setDateTo(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full h-9 rounded-md border border-gray-300 px-3 text-sm"
+                />
+              </div>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="w-3 h-3" />
+                Limpiar filtros
+              </Button>
+            )}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
           </div>
+        ) : orders.length === 0 ? (
+          <p className="text-gray-500 text-center py-12">
+            {hasActiveFilters
+              ? "No se encontraron pedidos con los filtros seleccionados."
+              : "No hay pedidos registrados."}
+          </p>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -158,8 +282,12 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                 <thead>
                   <tr className="border-b text-left text-gray-500">
                     <th className="pb-3 pr-3">
-                      <button onClick={toggleAll} className="hover:text-gray-700">
-                        {selected.size === orders.length && orders.length > 0 ? (
+                      <button
+                        onClick={toggleAll}
+                        className="hover:text-gray-700"
+                      >
+                        {selected.size === orders.length &&
+                        orders.length > 0 ? (
                           <CheckSquare className="w-4 h-4" />
                         ) : (
                           <Square className="w-4 h-4" />

@@ -3,7 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  FileText,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Eye,
+  Download,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface DocRecord {
@@ -15,6 +25,38 @@ interface DocRecord {
   order: {
     order_number: string;
     customer: { commercial_name: string };
+  };
+}
+
+interface DocDetail {
+  id: string;
+  type: string;
+  number: string | null;
+  status: string;
+  created_at: string;
+  data: {
+    order_number: string;
+    customer: {
+      name: string;
+      cuit: string | null;
+      address: string;
+      iva_condition: string | null;
+    };
+    items: {
+      code: string;
+      name: string;
+      quantity: number;
+      unit_price: number;
+      subtotal: number;
+    }[];
+    subtotal: number;
+    discount: number;
+    total: number;
+    date: string;
+  } | null;
+  order: {
+    order_number: string;
+    customer: { commercial_name: string; cuit: string | null };
   };
 }
 
@@ -36,13 +78,17 @@ export default function DocumentosPage() {
   const [docs, setDocs] = useState<DocRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [preview, setPreview] = useState<DocDetail | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const fetchDocs = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (typeFilter) params.set("type", typeFilter);
+    if (search) params.set("search", search);
     params.set("page", String(page));
     params.set("limit", "20");
 
@@ -51,11 +97,26 @@ export default function DocumentosPage() {
     setDocs(data.documents);
     setTotalPages(data.totalPages);
     setLoading(false);
-  }, [typeFilter, page]);
+  }, [typeFilter, search, page]);
 
   useEffect(() => {
     fetchDocs();
   }, [fetchDocs]);
+
+  const openPreview = async (docId: string) => {
+    setPreviewLoading(true);
+    setPreview(null);
+    const res = await fetch(`/api/documentos/${docId}`);
+    const data = await res.json();
+    setPreview(data);
+    setPreviewLoading(false);
+  };
+
+  const handleDownload = async (docId: string) => {
+    const res = await fetch(`/api/documentos/${docId}`);
+    const data: DocDetail = await res.json();
+    downloadDoc(data);
+  };
 
   return (
     <div>
@@ -70,6 +131,18 @@ export default function DocumentosPage() {
             </CardTitle>
           </div>
           <div className="flex gap-3 mt-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por N° pedido, N° documento o cliente..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-10"
+              />
+            </div>
             <select
               value={typeFilter}
               onChange={(e) => {
@@ -93,8 +166,9 @@ export default function DocumentosPage() {
             </div>
           ) : docs.length === 0 ? (
             <p className="text-gray-500 text-center py-12">
-              No hay documentos generados. Generá documentos desde la sección de
-              Pedidos.
+              {search
+                ? "No se encontraron documentos con ese criterio."
+                : "No hay documentos generados. Generá documentos desde la sección de Pedidos."}
             </p>
           ) : (
             <>
@@ -107,6 +181,7 @@ export default function DocumentosPage() {
                     <th className="pb-3">Cliente</th>
                     <th className="pb-3">Estado</th>
                     <th className="pb-3">Fecha</th>
+                    <th className="pb-3 text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -133,7 +208,9 @@ export default function DocumentosPage() {
                             "px-2 py-0.5 rounded-full text-xs capitalize",
                             doc.status === "emitido"
                               ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                              : doc.status === "anulado"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-800"
                           )}
                         >
                           {doc.status}
@@ -141,6 +218,26 @@ export default function DocumentosPage() {
                       </td>
                       <td className="py-3 text-gray-500">
                         {new Date(doc.created_at).toLocaleDateString("es-AR")}
+                      </td>
+                      <td className="py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openPreview(doc.id)}
+                            title="Previsualizar"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownload(doc.id)}
+                            title="Descargar"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -178,6 +275,200 @@ export default function DocumentosPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Preview Modal */}
+      {(preview || previewLoading) && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {previewLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+              </div>
+            ) : preview ? (
+              <>
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div>
+                    <h2 className="text-lg font-bold">
+                      {TYPE_LABELS[preview.type]} {preview.number}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Pedido: {preview.order.order_number}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => downloadDoc(preview)}
+                    >
+                      <Download className="w-4 h-4" />
+                      Descargar
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setPreview(null)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <DocumentPreview doc={preview} />
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function DocumentPreview({ doc }: { doc: DocDetail }) {
+  const data = doc.data;
+  if (!data) {
+    return (
+      <p className="text-gray-500">
+        Sin datos de previsualización disponibles.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-6 text-sm">
+      {/* Header */}
+      <div className="flex justify-between">
+        <div>
+          <p className="text-xl font-bold text-amber-700">Buenas Maltas</p>
+          <p className="text-gray-500">Cervecería Artesanal</p>
+        </div>
+        <div className="text-right">
+          <p className="font-bold text-lg">{TYPE_LABELS[doc.type]}</p>
+          <p className="text-gray-600">N° {doc.number}</p>
+          <p className="text-gray-500">
+            {new Date(data.date).toLocaleDateString("es-AR")}
+          </p>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* Customer */}
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+          Cliente
+        </p>
+        <p className="font-medium">{data.customer.name}</p>
+        {data.customer.cuit && (
+          <p className="text-gray-600">CUIT: {data.customer.cuit}</p>
+        )}
+        <p className="text-gray-600">{data.customer.address}</p>
+        {data.customer.iva_condition && (
+          <p className="text-gray-600">IVA: {data.customer.iva_condition}</p>
+        )}
+      </div>
+
+      {/* Items */}
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+          Detalle
+        </p>
+        <table className="w-full">
+          <thead>
+            <tr className="border-b text-left text-gray-500 text-xs">
+              <th className="pb-2">Código</th>
+              <th className="pb-2">Producto</th>
+              <th className="pb-2 text-right">Cant.</th>
+              <th className="pb-2 text-right">P. Unit.</th>
+              <th className="pb-2 text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.items.map((item, i) => (
+              <tr key={i} className="border-b">
+                <td className="py-2 text-gray-600">{item.code}</td>
+                <td className="py-2">{item.name}</td>
+                <td className="py-2 text-right">{item.quantity}</td>
+                <td className="py-2 text-right">
+                  ${item.unit_price.toLocaleString("es-AR")}
+                </td>
+                <td className="py-2 text-right font-medium">
+                  ${item.subtotal.toLocaleString("es-AR")}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Totals */}
+      <div className="flex justify-end">
+        <div className="w-48 space-y-1">
+          <div className="flex justify-between">
+            <span className="text-gray-500">Subtotal:</span>
+            <span>${data.subtotal.toLocaleString("es-AR")}</span>
+          </div>
+          {data.discount > 0 && (
+            <div className="flex justify-between text-red-600">
+              <span>Descuento:</span>
+              <span>-{data.discount}%</span>
+            </div>
+          )}
+          <div className="flex justify-between font-bold text-base border-t pt-1">
+            <span>Total:</span>
+            <span>${data.total.toLocaleString("es-AR")}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function downloadDoc(doc: DocDetail) {
+  const data = doc.data;
+  if (!data) return;
+
+  const lines = [
+    "═══════════════════════════════════════════",
+    "           BUENAS MALTAS",
+    "         Cervecería Artesanal",
+    "═══════════════════════════════════════════",
+    "",
+    `${TYPE_LABELS[doc.type].toUpperCase()} N° ${doc.number}`,
+    `Fecha: ${new Date(data.date).toLocaleDateString("es-AR")}`,
+    `Pedido: ${data.order_number}`,
+    "",
+    "───────────────────────────────────────────",
+    "CLIENTE",
+    `  ${data.customer.name}`,
+    data.customer.cuit ? `  CUIT: ${data.customer.cuit}` : "",
+    `  ${data.customer.address}`,
+    data.customer.iva_condition
+      ? `  IVA: ${data.customer.iva_condition}`
+      : "",
+    "",
+    "───────────────────────────────────────────",
+    "DETALLE",
+    "",
+    ...data.items.map(
+      (item) =>
+        `  ${item.quantity}x ${item.name} (${item.code})  $${item.subtotal.toLocaleString("es-AR")}`
+    ),
+    "",
+    "───────────────────────────────────────────",
+    `  Subtotal:  $${data.subtotal.toLocaleString("es-AR")}`,
+    data.discount > 0 ? `  Descuento: -${data.discount}%` : "",
+    `  TOTAL:     $${data.total.toLocaleString("es-AR")}`,
+    "═══════════════════════════════════════════",
+  ];
+
+  const content = lines.filter(Boolean).join("\n");
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${TYPE_LABELS[doc.type]}_${doc.number ?? doc.id}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
 }

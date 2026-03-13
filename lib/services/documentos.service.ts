@@ -105,15 +105,23 @@ export const documentosService = {
     type?: DocumentType;
     status?: DocumentStatus;
     orderId?: string;
+    search?: string;
     page?: number;
     limit?: number;
   }) {
-    const { type, status, orderId, page = 1, limit = 20 } = filters;
+    const { type, status, orderId, search, page = 1, limit = 20 } = filters;
 
     const where: Record<string, unknown> = {};
     if (type) where.type = type;
     if (status) where.status = status;
     if (orderId) where.order_id = orderId;
+    if (search) {
+      where.OR = [
+        { number: { contains: search, mode: "insensitive" } },
+        { order: { order_number: { contains: search, mode: "insensitive" } } },
+        { order: { customer: { commercial_name: { contains: search, mode: "insensitive" } } } },
+      ];
+    }
 
     const [documents, total] = await Promise.all([
       prisma.document.findMany({

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
       type: searchParams.get("type") as DocumentType | undefined,
       status: searchParams.get("status") as DocumentStatus | undefined,
       orderId: searchParams.get("orderId") ?? undefined,
+      search: searchParams.get("search") ?? undefined,
       page: Number(searchParams.get("page")) || 1,
       limit: Number(searchParams.get("limit")) || 20,
     });
