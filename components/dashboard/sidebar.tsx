@@ -33,7 +33,7 @@ export function Sidebar() {
         </div>
         <div>
           <h1 className="font-bold text-lg">Buenas Maltas</h1>
-          <p className="text-xs text-gray-400">Sistema de Gestión</p>
+          <p className="text-xs text-gray-600">Sistema de Gestión</p>
         </div>
       </div>
 
@@ -50,7 +50,7 @@ export function Sidebar() {
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 isActive
                   ? "bg-amber-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                  : "text-gray-500 hover:bg-gray-800 hover:text-white"
               )}
             >
               <item.icon className="w-5 h-5" />
@@ -61,7 +61,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-gray-800">
-        <p className="text-xs text-gray-500 text-center">v1.0.0</p>
+        <p className="text-xs text-gray-700 text-center">v1.0.0</p>
       </div>
     </aside>
   );

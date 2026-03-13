@@ -84,7 +84,7 @@ export function DocumentoGenerator({
             <FileText className="w-5 h-5" />
             Generar Documentos
           </CardTitle>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-700">
             {orderIds.length} pedido{orderIds.length > 1 ? "s" : ""}{" "}
             seleccionado{orderIds.length > 1 ? "s" : ""}
           </p>

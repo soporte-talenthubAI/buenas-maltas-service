@@ -80,7 +80,7 @@ export default function AIChatPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Chat IA</h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-700">
             Preguntale a la IA sobre tus datos de negocio
           </p>
         </div>
@@ -91,11 +91,11 @@ export default function AIChatPage() {
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <Bot className="w-16 h-16 text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-1">
+              <Bot className="w-16 h-16 text-gray-400 mb-4" />
+              <p className="text-gray-700 mb-1">
                 Asistente de Inteligencia Comercial
               </p>
-              <p className="text-sm text-gray-400 mb-6">
+              <p className="text-sm text-gray-600 mb-6">
                 Hacé preguntas sobre ventas, clientes, productos y rutas.
               </p>
               <div className="flex flex-wrap gap-2 max-w-lg justify-center">

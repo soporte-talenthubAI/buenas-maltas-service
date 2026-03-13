@@ -165,7 +165,7 @@ export default function DocumentosPage() {
               <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
             </div>
           ) : docs.length === 0 ? (
-            <p className="text-gray-500 text-center py-12">
+            <p className="text-gray-700 text-center py-12">
               {search
                 ? "No se encontraron documentos con ese criterio."
                 : "No hay documentos generados. Generá documentos desde la sección de Pedidos."}
@@ -174,7 +174,7 @@ export default function DocumentosPage() {
             <>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-gray-500">
+                  <tr className="border-b text-left text-gray-700">
                     <th className="pb-3">Número</th>
                     <th className="pb-3">Tipo</th>
                     <th className="pb-3">Pedido</th>
@@ -216,7 +216,7 @@ export default function DocumentosPage() {
                           {doc.status}
                         </span>
                       </td>
-                      <td className="py-3 text-gray-500">
+                      <td className="py-3 text-gray-700">
                         {new Date(doc.created_at).toLocaleDateString("es-AR")}
                       </td>
                       <td className="py-3 text-right">
@@ -246,7 +246,7 @@ export default function DocumentosPage() {
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-700">
                     Página {page} de {totalPages}
                   </p>
                   <div className="flex gap-2">
@@ -291,7 +291,7 @@ export default function DocumentosPage() {
                     <h2 className="text-lg font-bold">
                       {TYPE_LABELS[preview.type]} {preview.number}
                     </h2>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-700">
                       Pedido: {preview.order.order_number}
                     </p>
                   </div>
@@ -329,7 +329,7 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
   const data = doc.data;
   if (!data) {
     return (
-      <p className="text-gray-500">
+      <p className="text-gray-700">
         Sin datos de previsualización disponibles.
       </p>
     );
@@ -341,12 +341,12 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
       <div className="flex justify-between">
         <div>
           <p className="text-xl font-bold text-amber-700">Buenas Maltas</p>
-          <p className="text-gray-500">Cervecería Artesanal</p>
+          <p className="text-gray-700">Cervecería Artesanal</p>
         </div>
         <div className="text-right">
           <p className="font-bold text-lg">{TYPE_LABELS[doc.type]}</p>
           <p className="text-gray-600">N° {doc.number}</p>
-          <p className="text-gray-500">
+          <p className="text-gray-700">
             {new Date(data.date).toLocaleDateString("es-AR")}
           </p>
         </div>
@@ -356,7 +356,7 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
 
       {/* Customer */}
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+        <p className="text-xs text-gray-700 uppercase tracking-wider mb-1">
           Cliente
         </p>
         <p className="font-medium">{data.customer.name}</p>
@@ -371,12 +371,12 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
 
       {/* Items */}
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+        <p className="text-xs text-gray-700 uppercase tracking-wider mb-2">
           Detalle
         </p>
         <table className="w-full">
           <thead>
-            <tr className="border-b text-left text-gray-500 text-xs">
+            <tr className="border-b text-left text-gray-700 text-xs">
               <th className="pb-2">Código</th>
               <th className="pb-2">Producto</th>
               <th className="pb-2 text-right">Cant.</th>
@@ -406,7 +406,7 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
       <div className="flex justify-end">
         <div className="w-48 space-y-1">
           <div className="flex justify-between">
-            <span className="text-gray-500">Subtotal:</span>
+            <span className="text-gray-700">Subtotal:</span>
             <span>${data.subtotal.toLocaleString("es-AR")}</span>
           </div>
           {data.discount > 0 && (
@@ -425,50 +425,129 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
   );
 }
 
-function downloadDoc(doc: DocDetail) {
+async function downloadDoc(doc: DocDetail) {
   const data = doc.data;
   if (!data) return;
 
-  const lines = [
-    "═══════════════════════════════════════════",
-    "           BUENAS MALTAS",
-    "         Cervecería Artesanal",
-    "═══════════════════════════════════════════",
-    "",
-    `${TYPE_LABELS[doc.type].toUpperCase()} N° ${doc.number}`,
-    `Fecha: ${new Date(data.date).toLocaleDateString("es-AR")}`,
-    `Pedido: ${data.order_number}`,
-    "",
-    "───────────────────────────────────────────",
-    "CLIENTE",
-    `  ${data.customer.name}`,
-    data.customer.cuit ? `  CUIT: ${data.customer.cuit}` : "",
-    `  ${data.customer.address}`,
-    data.customer.iva_condition
-      ? `  IVA: ${data.customer.iva_condition}`
-      : "",
-    "",
-    "───────────────────────────────────────────",
-    "DETALLE",
-    "",
-    ...data.items.map(
-      (item) =>
-        `  ${item.quantity}x ${item.name} (${item.code})  $${item.subtotal.toLocaleString("es-AR")}`
-    ),
-    "",
-    "───────────────────────────────────────────",
-    `  Subtotal:  $${data.subtotal.toLocaleString("es-AR")}`,
-    data.discount > 0 ? `  Descuento: -${data.discount}%` : "",
-    `  TOTAL:     $${data.total.toLocaleString("es-AR")}`,
-    "═══════════════════════════════════════════",
-  ];
+  const { jsPDF } = await import("jspdf");
+  const autoTable = (await import("jspdf-autotable")).default;
 
-  const content = lines.filter(Boolean).join("\n");
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${TYPE_LABELS[doc.type]}_${doc.number ?? doc.id}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const pdf = new jsPDF();
+
+  // Header - Brand
+  pdf.setFontSize(20);
+  pdf.setTextColor(180, 100, 0);
+  pdf.text("Buenas Maltas", 14, 22);
+  pdf.setFontSize(10);
+  pdf.setTextColor(100);
+  pdf.text("Cervecería Artesanal", 14, 28);
+
+  // Header - Document type
+  pdf.setFontSize(16);
+  pdf.setTextColor(40);
+  pdf.text(TYPE_LABELS[doc.type], 196, 18, { align: "right" });
+  pdf.setFontSize(10);
+  pdf.setTextColor(80);
+  pdf.text(`N° ${doc.number}`, 196, 24, { align: "right" });
+  pdf.text(new Date(data.date).toLocaleDateString("es-AR"), 196, 30, {
+    align: "right",
+  });
+  pdf.text(`Pedido: ${data.order_number}`, 196, 36, { align: "right" });
+
+  // Separator
+  pdf.setDrawColor(200);
+  pdf.line(14, 42, 196, 42);
+
+  // Customer
+  let y = 50;
+  pdf.setFontSize(8);
+  pdf.setTextColor(140);
+  pdf.text("CLIENTE", 14, y);
+  y += 6;
+  pdf.setFontSize(11);
+  pdf.setTextColor(40);
+  pdf.text(data.customer.name, 14, y);
+  y += 5;
+  pdf.setFontSize(9);
+  pdf.setTextColor(80);
+  if (data.customer.cuit) {
+    pdf.text(`CUIT: ${data.customer.cuit}`, 14, y);
+    y += 5;
+  }
+  pdf.text(data.customer.address, 14, y);
+  y += 5;
+  if (data.customer.iva_condition) {
+    pdf.text(`IVA: ${data.customer.iva_condition}`, 14, y);
+    y += 5;
+  }
+
+  // Items table
+  y += 5;
+  autoTable(pdf, {
+    startY: y,
+    head: [["Código", "Producto", "Cant.", "P. Unit.", "Subtotal"]],
+    body: data.items.map((item) => [
+      item.code,
+      item.name,
+      String(item.quantity),
+      `$${item.unit_price.toLocaleString("es-AR")}`,
+      `$${item.subtotal.toLocaleString("es-AR")}`,
+    ]),
+    headStyles: {
+      fillColor: [180, 100, 0],
+      textColor: 255,
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9, textColor: [40, 40, 40] },
+    columnStyles: {
+      2: { halign: "right" },
+      3: { halign: "right" },
+      4: { halign: "right" },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  // Totals
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const finalY = (pdf as any).lastAutoTable?.finalY ?? y + 40;
+  let totY = finalY + 10;
+
+  pdf.setFontSize(10);
+  pdf.setTextColor(80);
+  pdf.text("Subtotal:", 150, totY);
+  pdf.text(`$${data.subtotal.toLocaleString("es-AR")}`, 196, totY, {
+    align: "right",
+  });
+  totY += 6;
+
+  if (data.discount > 0) {
+    pdf.setTextColor(200, 50, 50);
+    pdf.text("Descuento:", 150, totY);
+    pdf.text(`-${data.discount}%`, 196, totY, { align: "right" });
+    totY += 6;
+  }
+
+  pdf.setDrawColor(200);
+  pdf.line(150, totY, 196, totY);
+  totY += 6;
+  pdf.setFontSize(12);
+  pdf.setTextColor(40);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("TOTAL:", 150, totY);
+  pdf.text(`$${data.total.toLocaleString("es-AR")}`, 196, totY, {
+    align: "right",
+  });
+
+  // Footer
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8);
+  pdf.setTextColor(160);
+  pdf.text(
+    "Documento generado por Buenas Maltas - Sistema de Gestión",
+    105,
+    285,
+    { align: "center" }
+  );
+
+  pdf.save(`${TYPE_LABELS[doc.type]}_${doc.number ?? doc.id}.pdf`);
 }

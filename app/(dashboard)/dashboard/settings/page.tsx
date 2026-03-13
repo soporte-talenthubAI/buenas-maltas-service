@@ -9,7 +9,7 @@ export default function SettingsPage() {
           <CardTitle>Configuración del Sistema</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-500">
+          <p className="text-gray-700">
             Configuración general, usuarios y conexiones.
           </p>
         </CardContent>

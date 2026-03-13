@@ -68,9 +68,9 @@ export default function RutasPage() {
       ) : routes.length === 0 ? (
         <Card>
           <CardContent className="py-20 text-center">
-            <RouteIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No hay rutas generadas.</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <RouteIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-700">No hay rutas generadas.</p>
+            <p className="text-sm text-gray-600 mt-1">
               Generá una ruta desde pedidos documentados.
             </p>
             <Link href="/dashboard/rutas/generar">
@@ -93,7 +93,7 @@ export default function RutasPage() {
                     </div>
                     <div>
                       <p className="font-medium">{route.route_code}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                      <div className="flex items-center gap-3 text-xs text-gray-700 mt-1">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {new Date(route.scheduled_date).toLocaleDateString(
@@ -113,12 +113,12 @@ export default function RutasPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {route.total_distance_km && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-700">
                         {Number(route.total_distance_km).toFixed(1)} km
                       </span>
                     )}
                     {route.estimated_duration && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-700">
                         {route.estimated_duration} min
                       </span>
                     )}

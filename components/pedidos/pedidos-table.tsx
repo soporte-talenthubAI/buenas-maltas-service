@@ -53,7 +53,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  baja: "text-gray-500",
+  baja: "text-gray-700",
   normal: "text-blue-600",
   alta: "text-orange-600",
   urgente: "text-red-600 font-bold",
@@ -142,7 +142,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
         <div className="flex items-center justify-between">
           <CardTitle>
             Pedidos{" "}
-            <span className="text-sm font-normal text-gray-500">
+            <span className="text-sm font-normal text-gray-700">
               ({total})
             </span>
           </CardTitle>
@@ -186,7 +186,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
           <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">
+                <label className="text-xs text-gray-700 mb-1 block">
                   Estado
                 </label>
                 <select
@@ -207,7 +207,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">
+                <label className="text-xs text-gray-700 mb-1 block">
                   Cliente
                 </label>
                 <select
@@ -227,7 +227,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">
+                <label className="text-xs text-gray-700 mb-1 block">
                   Fecha desde
                 </label>
                 <input
@@ -241,7 +241,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">
+                <label className="text-xs text-gray-700 mb-1 block">
                   Fecha hasta
                 </label>
                 <input
@@ -270,7 +270,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
             <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
           </div>
         ) : orders.length === 0 ? (
-          <p className="text-gray-500 text-center py-12">
+          <p className="text-gray-700 text-center py-12">
             {hasActiveFilters
               ? "No se encontraron pedidos con los filtros seleccionados."
               : "No hay pedidos registrados."}
@@ -280,7 +280,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-gray-500">
+                  <tr className="border-b text-left text-gray-700">
                     <th className="pb-3 pr-3">
                       <button
                         onClick={toggleAll}
@@ -325,7 +325,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                       </td>
                       <td className="py-3 pr-3">
                         <div>{order.customer.commercial_name}</div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-600">
                           {order.customer.locality}
                         </div>
                       </td>
@@ -355,10 +355,10 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                       <td className="py-3 pr-3 text-right font-medium">
                         ${Number(order.total).toLocaleString("es-AR")}
                       </td>
-                      <td className="py-3 pr-3 text-center text-gray-500">
+                      <td className="py-3 pr-3 text-center text-gray-700">
                         {order._count.items}
                       </td>
-                      <td className="py-3 pr-3 text-center text-gray-500">
+                      <td className="py-3 pr-3 text-center text-gray-700">
                         {order._count.documents}
                       </td>
                       <td className="py-3">
@@ -376,7 +376,7 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-700">
                   Página {page} de {totalPages}
                 </p>
                 <div className="flex gap-2">

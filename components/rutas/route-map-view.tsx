@@ -77,7 +77,7 @@ export function RouteMapView({
                 <p className="text-lg font-bold">
                   {vrptw.totalDistance?.toFixed(1)} km
                 </p>
-                <p className="text-xs text-gray-500">Distancia</p>
+                <p className="text-xs text-gray-700">Distancia</p>
               </CardContent>
             </Card>
             <Card>
@@ -86,7 +86,7 @@ export function RouteMapView({
                 <p className="text-lg font-bold">
                   {Math.round(vrptw.totalDuration ?? 0)} min
                 </p>
-                <p className="text-xs text-gray-500">Duración</p>
+                <p className="text-xs text-gray-700">Duración</p>
               </CardContent>
             </Card>
           </>
@@ -99,7 +99,7 @@ export function RouteMapView({
                 <p className="text-lg font-bold">
                   ${costCalculation.fuelCost.toFixed(0)}
                 </p>
-                <p className="text-xs text-gray-500">Combustible</p>
+                <p className="text-xs text-gray-700">Combustible</p>
               </CardContent>
             </Card>
             <Card>
@@ -108,7 +108,7 @@ export function RouteMapView({
                 <p className="text-lg font-bold">
                   ${costCalculation.totalCost.toFixed(0)}
                 </p>
-                <p className="text-xs text-gray-500">Costo Total</p>
+                <p className="text-xs text-gray-700">Costo Total</p>
               </CardContent>
             </Card>
           </>
@@ -160,7 +160,7 @@ export function RouteMapView({
           ) : mapUrl ? (
             <div className="w-full h-[400px] rounded-lg bg-gray-100 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-gray-500 mb-2">
+                <p className="text-gray-700 mb-2">
                   Configurá GOOGLE_MAPS_API_KEY para ver el mapa embebido
                 </p>
                 <a href={mapUrl} target="_blank" rel="noopener noreferrer">
@@ -173,7 +173,7 @@ export function RouteMapView({
             </div>
           ) : (
             <div className="w-full h-[400px] rounded-lg bg-gray-100 flex items-center justify-center">
-              <p className="text-gray-500">Mapa no disponible</p>
+              <p className="text-gray-700">Mapa no disponible</p>
             </div>
           )}
         </CardContent>
@@ -214,7 +214,7 @@ export function RouteMapView({
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium">{stop.address}</p>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-700">
                           <MapPin className="w-3 h-3" />
                           {stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}
                           {arrival && (

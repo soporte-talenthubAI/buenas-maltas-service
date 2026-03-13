@@ -41,7 +41,7 @@ export default async function RouteDetailPage({
           <h1 className="text-2xl font-bold text-gray-900">
             {route.route_code}
           </h1>
-          <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+          <div className="flex items-center gap-3 text-sm text-gray-700 mt-1">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {new Date(route.scheduled_date).toLocaleDateString("es-AR")}
@@ -61,7 +61,7 @@ export default async function RouteDetailPage({
             <p className="text-2xl font-bold">
               {route.route_orders.length}
             </p>
-            <p className="text-xs text-gray-500">Paradas</p>
+            <p className="text-xs text-gray-700">Paradas</p>
           </CardContent>
         </Card>
         {route.total_distance_km && (
@@ -70,7 +70,7 @@ export default async function RouteDetailPage({
               <p className="text-2xl font-bold">
                 {Number(route.total_distance_km).toFixed(1)} km
               </p>
-              <p className="text-xs text-gray-500">Distancia</p>
+              <p className="text-xs text-gray-700">Distancia</p>
             </CardContent>
           </Card>
         )}
@@ -78,7 +78,7 @@ export default async function RouteDetailPage({
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold">{route.estimated_duration} min</p>
-              <p className="text-xs text-gray-500">Duración</p>
+              <p className="text-xs text-gray-700">Duración</p>
             </CardContent>
           </Card>
         )}
@@ -88,7 +88,7 @@ export default async function RouteDetailPage({
               <p className="text-2xl font-bold">
                 ${Number(route.total_cost).toFixed(0)}
               </p>
-              <p className="text-xs text-gray-500">Costo Total</p>
+              <p className="text-xs text-gray-700">Costo Total</p>
             </CardContent>
           </Card>
         )}
@@ -143,13 +143,13 @@ export default async function RouteDetailPage({
                       {ro.status.replace("_", " ")}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                  <p className="text-xs text-gray-700 flex items-center gap-1 mt-1">
                     <MapPin className="w-3 h-3" />
                     {ro.order.customer.street}{" "}
                     {ro.order.customer.street_number},{" "}
                     {ro.order.customer.locality}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-600 mt-0.5">
                     Pedido: {ro.order.order_number} · $
                     {Number(ro.order.total).toLocaleString("es-AR")}
                   </p>

@@ -206,7 +206,7 @@ export function SmartRouteGenerator() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-xs text-gray-500">Fecha de ruta</label>
+              <label className="text-xs text-gray-700">Fecha de ruta</label>
               <input
                 type="date"
                 value={scheduledDate}
@@ -215,7 +215,7 @@ export function SmartRouteGenerator() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Chofer</label>
+              <label className="text-xs text-gray-700">Chofer</label>
               <select
                 value={driverId}
                 onChange={(e) => setDriverId(e.target.value)}
@@ -230,7 +230,7 @@ export function SmartRouteGenerator() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-gray-500">Vehículo</label>
+                <label className="text-xs text-gray-700">Vehículo</label>
                 <select
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value)}
@@ -244,7 +244,7 @@ export function SmartRouteGenerator() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-gray-500">Combustible</label>
+                <label className="text-xs text-gray-700">Combustible</label>
                 <select
                   value={fuelType}
                   onChange={(e) => setFuelType(e.target.value)}
@@ -259,7 +259,7 @@ export function SmartRouteGenerator() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-gray-500">Hora inicio</label>
+              <label className="text-xs text-gray-700">Hora inicio</label>
               <input
                 type="time"
                 value={startTime}
@@ -281,7 +281,7 @@ export function SmartRouteGenerator() {
           </CardHeader>
           <CardContent>
             {orders.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-700">
                 No hay pedidos documentados con coordenadas disponibles.
               </p>
             ) : (
@@ -302,11 +302,11 @@ export function SmartRouteGenerator() {
                         <p className="text-sm font-medium">
                           {order.customer.commercial_name}
                         </p>
-                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                        <p className="text-xs text-gray-700 flex items-center gap-1 mt-1">
                           <MapPin className="w-3 h-3" />
                           {order.customer.street} {order.customer.street_number}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600">
                           {order.order_number} · $
                           {Number(order.total).toLocaleString("es-AR")}
                         </p>
@@ -314,7 +314,7 @@ export function SmartRouteGenerator() {
                       {selected.has(order.id) ? (
                         <CheckSquare className="w-4 h-4 text-amber-600 flex-shrink-0" />
                       ) : (
-                        <Square className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                        <Square className="w-4 h-4 text-gray-400 flex-shrink-0" />
                       )}
                     </div>
                     {order.customer.has_time_restriction && (
@@ -382,11 +382,11 @@ export function SmartRouteGenerator() {
         ) : (
           <Card>
             <CardContent className="py-20 text-center">
-              <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">
+              <Truck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-700">
                 Seleccioná pedidos y generá una ruta optimizada.
               </p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 Mínimo 2 pedidos documentados con coordenadas.
               </p>
             </CardContent>

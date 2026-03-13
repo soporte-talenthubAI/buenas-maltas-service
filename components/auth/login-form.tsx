@@ -49,7 +49,7 @@ export function LoginForm() {
             <Beer className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Buenas Maltas</h1>
-          <p className="text-gray-500 mt-1">Sistema de Gestión</p>
+          <p className="text-gray-700 mt-1">Sistema de Gestión</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -106,10 +106,10 @@ export function LoginForm() {
         </form>
 
         <div className="mt-6 pt-4 border-t border-gray-100">
-          <p className="text-xs text-center text-gray-400">
+          <p className="text-xs text-center text-gray-600">
             Admin: admin@buenasmaltas.com / admin123
           </p>
-          <p className="text-xs text-center text-gray-400">
+          <p className="text-xs text-center text-gray-600">
             Chofer: chofer@buenasmaltas.com / driver123
           </p>
         </div>
