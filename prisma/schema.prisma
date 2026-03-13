@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── AUTH & USERS ───────────────────────────────────────────
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  name        String
+  password    String
+  role        UserRole  @default(admin)
+  avatar_url  String?
+  is_active   Boolean   @default(true)
+  last_access DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  routes_as_driver Route[]      @relation("driver")
+  created_orders   Order[]      @relation("created_by")
+}
+
+enum UserRole {
+  admin
+  repartidor
+}
+
+// ─── CUSTOMERS ──────────────────────────────────────────────
+
+model Customer {
+  id                    String   @id @default(cuid())
+  code                  String   @unique
+  commercial_name       String
+  contact_name          String?
+  phone                 String?
+  email                 String?
+  cuit                  String?
+  iva_condition         String?
+  // Address
+  street                String
+  street_number         String
+  locality              String
+  province              String   @default("Córdoba")
+  postal_code           String?
+  // Coordinates (geocoded)
+  latitude              Decimal? @db.Decimal(10, 8)
+  longitude             Decimal? @db.Decimal(11, 8)
+  // Time windows (VRPTW)
+  has_time_restriction  Boolean  @default(false)
+  delivery_window_start String?
+  delivery_window_end   String?
+  // Status
+  is_active             Boolean  @default(true)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  orders Order[]
+}
+
+// ─── ORDERS ─────────────────────────────────────────────────
+
+model Order {
+  id            String        @id @default(cuid())
+  order_number  String        @unique
+  customer_id   String
+  customer      Customer      @relation(fields: [customer_id], references: [id])
+  order_date    DateTime
+  delivery_date DateTime?
+  status        OrderStatus   @default(pendiente)
+  priority      OrderPriority @default(normal)
+  subtotal      Decimal       @db.Decimal(12, 2)
+  discount      Decimal       @default(0) @db.Decimal(5, 2)
+  total         Decimal       @db.Decimal(12, 2)
+  observations  String?
+  // Tango sync
+  tango_id      String?       @unique
+  // Relations
+  created_by_id String
+  created_by    User          @relation("created_by", fields: [created_by_id], references: [id])
+  items         OrderItem[]
+  documents     Document[]
+  route_orders  RouteOrder[]
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+}
+
+enum OrderStatus {
+  pendiente
+  confirmado
+  documentado
+  en_ruta
+  entregado
+  cancelado
+}
+
+enum OrderPriority {
+  baja
+  normal
+  alta
+  urgente
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  order_id     String
+  order        Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product_code String
+  product_name String
+  quantity     Decimal @db.Decimal(10, 2)
+  unit_price   Decimal @db.Decimal(12, 2)
+  subtotal     Decimal @db.Decimal(12, 2)
+}
+
+// ─── DOCUMENTS ──────────────────────────────────────────────
+
+model Document {
+  id         String         @id @default(cuid())
+  order_id   String
+  order      Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  type       DocumentType
+  number     String?
+  status     DocumentStatus @default(borrador)
+  data       Json?
+  pdf_url    String?
+  tango_id   String?
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+}
+
+enum DocumentType {
+  presupuesto
+  orden_venta
+  remito
+  factura
+}
+
+enum DocumentStatus {
+  borrador
+  emitido
+  anulado
+}
+
+// ─── ROUTES ─────────────────────────────────────────────────
+
+model Route {
+  id                 String      @id @default(cuid())
+  route_code         String      @unique
+  driver_id          String
+  driver             User        @relation("driver", fields: [driver_id], references: [id])
+  scheduled_date     DateTime
+  status             RouteStatus @default(planificada)
+  // Optimization metrics
+  total_distance_km  Decimal?    @db.Decimal(8, 2)
+  estimated_duration Int?
+  fuel_cost          Decimal?    @db.Decimal(10, 2)
+  driver_cost        Decimal?    @db.Decimal(10, 2)
+  total_cost         Decimal?    @db.Decimal(10, 2)
+  // Optimization data
+  google_maps_url    String?
+  optimized_route    Json?
+  vrptw_result       Json?
+  // Timestamps
+  actual_start_time  DateTime?
+  actual_end_time    DateTime?
+  created_at         DateTime    @default(now())
+  updated_at         DateTime    @updatedAt
+
+  route_orders RouteOrder[]
+}
+
+enum RouteStatus {
+  planificada
+  en_curso
+  completada
+  cancelada
+}
+
+model RouteOrder {
+  id             String         @id @default(cuid())
+  route_id       String
+  route          Route          @relation(fields: [route_id], references: [id], onDelete: Cascade)
+  order_id       String
+  order          Order          @relation(fields: [order_id], references: [id])
+  delivery_order Int
+  status         DeliveryStatus @default(pendiente)
+  actual_arrival DateTime?
+  delivery_notes String?
+  created_at     DateTime       @default(now())
+
+  @@unique([route_id, order_id])
+}
+
+enum DeliveryStatus {
+  pendiente
+  entregado
+  no_entregado
+  reprogramado
+}
