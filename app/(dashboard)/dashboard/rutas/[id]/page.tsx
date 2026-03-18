@@ -1,6 +1,8 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { rutasInteligentesService } from "@/lib/services/rutas-inteligentes.service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +17,50 @@ import {
   Package,
   Fuel,
   Phone,
+  Loader2,
+  Play,
+  Square,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+
+interface RouteOrder {
+  id: string;
+  delivery_order: number;
+  status: string;
+  actual_arrival: string | null;
+  delivery_notes: string | null;
+  order: {
+    id: string;
+    order_number: string;
+    total: string;
+    customer: {
+      commercial_name: string;
+      street: string;
+      street_number: string;
+      locality: string;
+      latitude: string | null;
+      longitude: string | null;
+      phone: string | null;
+    };
+  };
+}
+
+interface RouteDetail {
+  id: string;
+  route_code: string;
+  scheduled_date: string;
+  status: string;
+  total_distance_km: string | null;
+  estimated_duration: number | null;
+  fuel_cost: string | null;
+  driver_cost: string | null;
+  total_cost: string | null;
+  google_maps_url: string | null;
+  actual_start_time: string | null;
+  actual_end_time: string | null;
+  driver: { id: string; name: string; email: string };
+  route_orders: RouteOrder[];
+}
 
 const DELIVERY_STATUS_COLORS: Record<string, string> = {
   pendiente: "bg-yellow-100 text-yellow-800",
@@ -32,19 +76,109 @@ const ROUTE_STATUS_COLORS: Record<string, string> = {
   cancelada: "bg-red-100 text-red-800",
 };
 
-export default async function RouteDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const route = await rutasInteligentesService.getRouteById(id);
+export default function RouteDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [route, setRoute] = useState<RouteDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  if (!route) notFound();
+  const fetchRoute = async () => {
+    try {
+      const res = await fetch(`/api/rutas/${id}`);
+      if (!res.ok) {
+        setError("No se pudo cargar la ruta");
+        return;
+      }
+      const data = await res.json();
+      setRoute(data);
+    } catch {
+      setError("Error de conexión");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const delivered = route.route_orders.filter((ro) => ro.status === "entregado").length;
-  const notDelivered = route.route_orders.filter((ro) => ro.status === "no_entregado").length;
-  const pending = route.route_orders.filter((ro) => ro.status === "pendiente").length;
+  useEffect(() => {
+    fetchRoute();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const handleRouteStatusChange = async (
+    newStatus: "en_curso" | "completada" | "cancelada"
+  ) => {
+    if (!route) return;
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch(`/api/rutas/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        await fetchRoute();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleDeliveryStatusChange = async (
+    routeOrderId: string,
+    newStatus: "entregado" | "no_entregado",
+    notes?: string
+  ) => {
+    try {
+      const res = await fetch(`/api/rutas/${id}/delivery`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          routeOrderId,
+          status: newStatus,
+          notes,
+        }),
+      });
+      if (res.ok) {
+        await fetchRoute();
+      }
+    } catch {
+      // silently fail
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+      </div>
+    );
+  }
+
+  if (error || !route) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-red-600 mb-4">{error || "Ruta no encontrada"}</p>
+        <Link href="/dashboard/rutas">
+          <Button variant="outline">
+            <ArrowLeft className="w-4 h-4" />
+            Volver a Rutas
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const delivered = route.route_orders.filter(
+    (ro) => ro.status === "entregado"
+  ).length;
+  const notDelivered = route.route_orders.filter(
+    (ro) => ro.status === "no_entregado"
+  ).length;
+  const pending = route.route_orders.filter(
+    (ro) => ro.status === "pendiente"
+  ).length;
   const totalValue = route.route_orders.reduce(
     (sum, ro) => sum + Number(ro.order.total),
     0
@@ -88,16 +222,69 @@ export default async function RouteDetailPage({
               </span>
               {route.actual_start_time && (
                 <span className="text-green-700">
-                  Inicio: {new Date(route.actual_start_time).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                  Inicio:{" "}
+                  {new Date(route.actual_start_time).toLocaleTimeString(
+                    "es-AR",
+                    { hour: "2-digit", minute: "2-digit" }
+                  )}
                 </span>
               )}
               {route.actual_end_time && (
                 <span className="text-green-700">
-                  Fin: {new Date(route.actual_end_time).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                  Fin:{" "}
+                  {new Date(route.actual_end_time).toLocaleTimeString("es-AR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               )}
             </div>
           </div>
+        </div>
+
+        {/* Route actions */}
+        <div className="flex items-center gap-2">
+          {route.status === "planificada" && (
+            <Button
+              size="sm"
+              onClick={() => handleRouteStatusChange("en_curso")}
+              disabled={updatingStatus}
+            >
+              {updatingStatus ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+              Iniciar Ruta
+            </Button>
+          )}
+          {route.status === "en_curso" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleRouteStatusChange("completada")}
+              disabled={updatingStatus}
+            >
+              {updatingStatus ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4" />
+              )}
+              Completar Ruta
+            </Button>
+          )}
+          {(route.status === "planificada" || route.status === "en_curso") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-red-600 hover:text-red-700"
+              onClick={() => handleRouteStatusChange("cancelada")}
+              disabled={updatingStatus}
+            >
+              <XCircle className="w-4 h-4" />
+              Cancelar
+            </Button>
+          )}
         </div>
       </div>
 
@@ -132,8 +319,10 @@ export default async function RouteDetailPage({
           <Card>
             <CardContent className="p-4 text-center">
               <Clock className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-              <p className="text-2xl font-bold">{route.estimated_duration} min</p>
-              <p className="text-xs text-gray-700">Duración</p>
+              <p className="text-2xl font-bold">
+                {route.estimated_duration} min
+              </p>
+              <p className="text-xs text-gray-700">Duracion</p>
             </CardContent>
           </Card>
         )}
@@ -165,7 +354,9 @@ export default async function RouteDetailPage({
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-700">Progreso de entregas</p>
+            <p className="text-sm font-medium text-gray-700">
+              Progreso de entregas
+            </p>
             <p className="text-sm text-gray-600">
               {delivered}/{route.route_orders.length} entregados
               {notDelivered > 0 && ` · ${notDelivered} no entregados`}
@@ -193,9 +384,7 @@ export default async function RouteDetailPage({
             </div>
           </div>
           <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
-            <span>
-              Valor total: ${totalValue.toLocaleString("es-AR")}
-            </span>
+            <span>Valor total: ${totalValue.toLocaleString("es-AR")}</span>
             <span>
               Valor entregado: ${deliveredValue.toLocaleString("es-AR")}
             </span>
@@ -207,14 +396,6 @@ export default async function RouteDetailPage({
       {route.google_maps_url && (
         <Card className="mb-6">
           <CardContent className="p-4">
-            <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-gray-100">
-              <iframe
-                src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${route.route_orders[0]?.order.customer.latitude},${route.route_orders[0]?.order.customer.longitude}&destination=${route.route_orders[route.route_orders.length - 1]?.order.customer.latitude},${route.route_orders[route.route_orders.length - 1]?.order.customer.longitude}&mode=driving`}
-                className="w-full h-full border-0"
-                allowFullScreen
-                loading="lazy"
-              />
-            </div>
             <a
               href={route.google_maps_url}
               target="_blank"
@@ -246,8 +427,8 @@ export default async function RouteDetailPage({
                   ro.status === "entregado"
                     ? "bg-green-50 border-green-200"
                     : ro.status === "no_entregado"
-                    ? "bg-red-50 border-red-200"
-                    : "bg-gray-50 border-gray-200"
+                      ? "bg-red-50 border-red-200"
+                      : "bg-gray-50 border-gray-200"
                 )}
               >
                 <div
@@ -256,8 +437,8 @@ export default async function RouteDetailPage({
                     ro.status === "entregado"
                       ? "bg-green-600 text-white"
                       : ro.status === "no_entregado"
-                      ? "bg-red-500 text-white"
-                      : "bg-amber-600 text-white"
+                        ? "bg-red-500 text-white"
+                        : "bg-amber-600 text-white"
                   )}
                 >
                   {ro.status === "entregado" ? (
@@ -307,7 +488,11 @@ export default async function RouteDetailPage({
                     )}
                     {ro.actual_arrival && (
                       <span className="text-xs text-green-700">
-                        Llegada: {new Date(ro.actual_arrival).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                        Llegada:{" "}
+                        {new Date(ro.actual_arrival).toLocaleTimeString(
+                          "es-AR",
+                          { hour: "2-digit", minute: "2-digit" }
+                        )}
                       </span>
                     )}
                   </div>
@@ -316,6 +501,36 @@ export default async function RouteDetailPage({
                       Nota: {ro.delivery_notes}
                     </p>
                   )}
+
+                  {/* Delivery action buttons for admin */}
+                  {(route.status === "en_curso" ||
+                    route.status === "planificada") &&
+                    ro.status === "pendiente" && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs text-green-700 border-green-300 hover:bg-green-50"
+                          onClick={() =>
+                            handleDeliveryStatusChange(ro.id, "entregado")
+                          }
+                        >
+                          <CheckCircle className="w-3 h-3" />
+                          Entregado
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs text-red-700 border-red-300 hover:bg-red-50"
+                          onClick={() =>
+                            handleDeliveryStatusChange(ro.id, "no_entregado")
+                          }
+                        >
+                          <XCircle className="w-3 h-3" />
+                          No Entregado
+                        </Button>
+                      </div>
+                    )}
                 </div>
               </div>
             ))}
