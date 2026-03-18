@@ -19,11 +19,13 @@ interface Message {
 }
 
 const SUGGESTIONS = [
-  "Cuál es mi cliente con mayor facturación?",
-  "Cuál es el producto más vendido?",
-  "Cómo están los pedidos este mes?",
-  "Dame un resumen del estado de las rutas",
-  "Qué acciones puedo tomar para mejorar las ventas?",
+  "Dame un resumen ejecutivo del negocio",
+  "Cómo estamos este mes comparado con el anterior?",
+  "Cuáles son los clientes que más compran y cuáles están inactivos?",
+  "Qué producto me conviene impulsar y por qué?",
+  "Analizá la eficiencia de las rutas de entrega",
+  "Qué alertas o problemas detectás en los datos?",
+  "Sugerí 3 acciones concretas para mejorar las ventas",
 ];
 
 export default function AIChatPage() {

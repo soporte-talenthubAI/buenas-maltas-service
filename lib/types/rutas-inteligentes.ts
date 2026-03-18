@@ -86,9 +86,9 @@ export const FUEL_TYPES = [
   { value: "nafta_premium", label: "Nafta Premium" },
 ] as const;
 
-// Default depot: Córdoba center
+// Default depot: Plaza San Martín, Córdoba centro
 export const DEFAULT_DEPOT = {
-  lat: -31.4201,
-  lng: -64.1888,
+  lat: -31.4167528,
+  lng: -64.1835619,
   address: "Depósito Buenas Maltas, Córdoba",
 };

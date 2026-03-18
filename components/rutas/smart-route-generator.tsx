@@ -24,6 +24,15 @@ import type {
   RutaInteligenteResponse,
 } from "@/lib/types/rutas-inteligentes";
 
+interface DepotConfig {
+  name: string;
+  street: string;
+  street_number: string;
+  locality: string;
+  latitude: number;
+  longitude: number;
+}
+
 interface OrderForRoute {
   id: string;
   order_number: string;
@@ -49,6 +58,7 @@ interface Driver {
 export function SmartRouteGenerator() {
   const [orders, setOrders] = useState<OrderForRoute[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [depot, setDepot] = useState<DepotConfig | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -69,9 +79,11 @@ export function SmartRouteGenerator() {
     Promise.all([
       fetch("/api/rutas/orders").then((r) => r.json()),
       fetch("/api/rutas/drivers").then((r) => r.json()),
-    ]).then(([ordersData, driversData]) => {
+      fetch("/api/depot-config").then((r) => r.json()),
+    ]).then(([ordersData, driversData, depotData]) => {
       setOrders(ordersData);
       setDrivers(driversData);
+      if (depotData && depotData.id) setDepot(depotData);
       if (driversData.length) setDriverId(driversData[0].id);
       setLoading(false);
     });
@@ -98,13 +110,20 @@ export function SmartRouteGenerator() {
 
     const selectedOrders = orders.filter((o) => selected.has(o.id));
 
+    // Use depot from DB if available, otherwise fallback to DEFAULT_DEPOT
+    const depotLat = depot ? Number(depot.latitude) : DEFAULT_DEPOT.lat;
+    const depotLng = depot ? Number(depot.longitude) : DEFAULT_DEPOT.lng;
+    const depotAddress = depot
+      ? `${depot.name} - ${depot.street} ${depot.street_number}, ${depot.locality}`
+      : DEFAULT_DEPOT.address;
+
     const locations: Location[] = [
       {
         id: "depot-start",
-        lat: DEFAULT_DEPOT.lat,
-        lng: DEFAULT_DEPOT.lng,
+        lat: depotLat,
+        lng: depotLng,
         type: "partida",
-        address: DEFAULT_DEPOT.address,
+        address: depotAddress,
       },
       ...selectedOrders.map((o) => ({
         id: o.id,
@@ -125,10 +144,10 @@ export function SmartRouteGenerator() {
       })),
       {
         id: "depot-end",
-        lat: DEFAULT_DEPOT.lat,
-        lng: DEFAULT_DEPOT.lng,
+        lat: depotLat,
+        lng: depotLng,
         type: "llegada",
-        address: DEFAULT_DEPOT.address,
+        address: depotAddress,
       },
     ];
 
@@ -266,6 +285,23 @@ export function SmartRouteGenerator() {
                 onChange={(e) => setStartTime(e.target.value)}
                 className="w-full h-9 rounded-md border border-gray-300 px-3 text-sm"
               />
+            </div>
+
+            {/* Depot info */}
+            <div className="pt-3 border-t">
+              <label className="text-xs text-gray-700 flex items-center gap-1 mb-1">
+                <MapPin className="w-3 h-3" />
+                Depósito (partida/llegada)
+              </label>
+              {depot ? (
+                <p className="text-xs text-gray-600">
+                  {depot.name} - {depot.street} {depot.street_number}, {depot.locality}
+                </p>
+              ) : (
+                <p className="text-xs text-amber-600">
+                  Usando depósito por defecto. Configurá uno en Ajustes.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

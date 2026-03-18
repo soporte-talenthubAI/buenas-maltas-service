@@ -7,6 +7,8 @@ export async function GET(request: NextRequest) {
     const routes = await rutasInteligentesService.getRoutes({
       status: searchParams.get("status") ?? undefined,
       driverId: searchParams.get("driverId") ?? undefined,
+      dateFrom: searchParams.get("dateFrom") ?? undefined,
+      dateTo: searchParams.get("dateTo") ?? undefined,
     });
     return NextResponse.json(routes);
   } catch (error) {

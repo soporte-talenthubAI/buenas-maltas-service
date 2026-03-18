@@ -161,10 +161,23 @@ export const rutasInteligentesService = {
     return route;
   },
 
-  async getRoutes(filters: { status?: string; driverId?: string } = {}) {
+  async getActiveDepot() {
+    return prisma.depotConfig.findFirst({
+      where: { is_active: true },
+      orderBy: { created_at: "desc" },
+    });
+  },
+
+  async getRoutes(filters: { status?: string; driverId?: string; dateFrom?: string; dateTo?: string } = {}) {
     const where: Record<string, unknown> = {};
     if (filters.status) where.status = filters.status;
     if (filters.driverId) where.driver_id = filters.driverId;
+    if (filters.dateFrom || filters.dateTo) {
+      where.scheduled_date = {
+        ...(filters.dateFrom ? { gte: new Date(filters.dateFrom) } : {}),
+        ...(filters.dateTo ? { lte: new Date(filters.dateTo) } : {}),
+      };
+    }
 
     return prisma.route.findMany({
       where,

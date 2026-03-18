@@ -144,6 +144,24 @@ enum DocumentStatus {
   anulado
 }
 
+// ─── DEPOT CONFIGURATION ───────────────────────────────────
+
+model DepotConfig {
+  id             String   @id @default(cuid())
+  name           String   @default("Depósito Principal")
+  street         String
+  street_number  String
+  locality       String
+  province       String   @default("Córdoba")
+  postal_code    String?
+  latitude       Decimal  @db.Decimal(10, 8)
+  longitude      Decimal  @db.Decimal(11, 8)
+  radius_meters  Int      @default(200)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+
 // ─── ROUTES ─────────────────────────────────────────────────
 
 model Route {
