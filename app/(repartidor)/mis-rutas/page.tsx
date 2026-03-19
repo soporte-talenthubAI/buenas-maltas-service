@@ -68,19 +68,19 @@ export default function MisRutasPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Truck className="w-6 h-6 text-amber-600" />
-        <h1 className="text-xl font-bold text-gray-900">Mis Rutas</h1>
+        <h1 className="text-xl font-bold text-black">Mis Rutas</h1>
       </div>
 
       {/* Today's routes */}
       <div>
-        <h2 className="text-sm font-medium text-gray-900 mb-3">
+        <h2 className="text-sm font-medium text-black mb-3">
           Hoy · {new Date().toLocaleDateString("es-AR")}
         </h2>
         {todayRoutes.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
               <Navigation className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-900 text-sm">
+              <p className="text-black text-sm">
                 No tenés rutas asignadas para hoy.
               </p>
             </CardContent>
@@ -97,7 +97,7 @@ export default function MisRutasPage() {
       {/* Other routes */}
       {otherRoutes.length > 0 && (
         <div>
-          <h2 className="text-sm font-medium text-gray-900 mb-3">
+          <h2 className="text-sm font-medium text-black mb-3">
             Otras rutas
           </h2>
           <div className="space-y-3">
@@ -126,7 +126,7 @@ function RouteCard({ route }: { route: RouteForDriver }) {
             {route.status.replace("_", " ")}
           </span>
         </div>
-        <div className="flex items-center gap-4 text-xs text-gray-900 mb-3">
+        <div className="flex items-center gap-4 text-xs text-black mb-3">
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {new Date(route.scheduled_date).toLocaleDateString("es-AR")}

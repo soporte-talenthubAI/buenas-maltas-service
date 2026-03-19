@@ -48,15 +48,15 @@ export function LoginForm() {
           <div className="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mb-4">
             <Beer className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Buenas Maltas</h1>
-          <p className="text-gray-900 mt-1">Sistema de Gestión</p>
+          <h1 className="text-2xl font-bold text-black">Buenas Maltas</h1>
+          <p className="text-black mt-1">Sistema de Gestión</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-900 mb-1"
+              className="block text-sm font-medium text-black mb-1"
             >
               Email
             </label>
@@ -73,7 +73,7 @@ export function LoginForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-900 mb-1"
+              className="block text-sm font-medium text-black mb-1"
             >
               Contraseña
             </label>
@@ -106,10 +106,10 @@ export function LoginForm() {
         </form>
 
         <div className="mt-6 pt-4 border-t border-gray-100">
-          <p className="text-xs text-center text-gray-800">
+          <p className="text-xs text-center text-black">
             Admin: admin@buenasmaltas.com / admin123
           </p>
-          <p className="text-xs text-center text-gray-800">
+          <p className="text-xs text-center text-black">
             Chofer: chofer@buenasmaltas.com / driver123
           </p>
         </div>

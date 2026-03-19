@@ -45,13 +45,13 @@ const stats = [
 export default function DashboardPage() {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-black mb-6">Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-900">
+              <CardTitle className="text-sm font-medium text-black">
                 {stat.title}
               </CardTitle>
               <div className={`p-2 rounded-lg ${stat.color}`}>
@@ -60,7 +60,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-gray-900 mt-1">{stat.description}</p>
+              <p className="text-xs text-black mt-1">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
@@ -72,7 +72,7 @@ export default function DashboardPage() {
             <CardTitle>Últimos Pedidos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-900 text-sm">
+            <p className="text-black text-sm">
               Los pedidos se cargarán desde el módulo de pedidos.
             </p>
           </CardContent>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
             <CardTitle>Rutas del Día</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-900 text-sm">
+            <p className="text-black text-sm">
               Las rutas se cargarán desde el módulo de rutas inteligentes.
             </p>
           </CardContent>

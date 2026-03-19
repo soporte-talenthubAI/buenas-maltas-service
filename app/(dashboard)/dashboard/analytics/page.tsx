@@ -83,7 +83,7 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+        <h1 className="text-2xl font-bold text-black">Analytics</h1>
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border border-gray-200 overflow-hidden">
             {(["week", "month", "year"] as const).map((p) => (
@@ -93,7 +93,7 @@ export default function AnalyticsPage() {
                 className={`px-3 py-1.5 text-sm ${
                   period === p
                     ? "bg-amber-600 text-white"
-                    : "bg-white text-gray-800 hover:bg-gray-50"
+                    : "bg-white text-black hover:bg-gray-50"
                 }`}
               >
                 {p === "week" ? "Semana" : p === "month" ? "Mes" : "Año"}
@@ -121,7 +121,7 @@ export default function AnalyticsPage() {
                 <p className="text-2xl font-bold">
                   ${data.overview.totalSales.toLocaleString("es-AR", { maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-xs text-gray-900">Ventas Totales</p>
+                <p className="text-xs text-black">Ventas Totales</p>
               </div>
             </div>
           </CardContent>
@@ -134,7 +134,7 @@ export default function AnalyticsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{data.overview.totalOrders}</p>
-                <p className="text-xs text-gray-900">Pedidos</p>
+                <p className="text-xs text-black">Pedidos</p>
               </div>
             </div>
           </CardContent>
@@ -149,7 +149,7 @@ export default function AnalyticsPage() {
                 <p className="text-2xl font-bold">
                   ${data.overview.avgOrderValue.toLocaleString("es-AR", { maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-xs text-gray-900">Ticket Promedio</p>
+                <p className="text-xs text-black">Ticket Promedio</p>
               </div>
             </div>
           </CardContent>
@@ -162,7 +162,7 @@ export default function AnalyticsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{data.routeEfficiency.totalRoutes}</p>
-                <p className="text-xs text-gray-900">Rutas Completadas</p>
+                <p className="text-xs text-black">Rutas Completadas</p>
               </div>
             </div>
           </CardContent>
@@ -211,7 +211,7 @@ export default function AnalyticsPage() {
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-800 text-sm text-center py-10">
+              <p className="text-black text-sm text-center py-10">
                 Sin datos para el período seleccionado
               </p>
             )}
@@ -248,7 +248,7 @@ export default function AnalyticsPage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-800 text-sm text-center py-10">Sin datos</p>
+              <p className="text-black text-sm text-center py-10">Sin datos</p>
             )}
             <div className="flex flex-wrap gap-2 justify-center mt-2">
               {data.ordersByStatus.map((s, i) => (
@@ -298,7 +298,7 @@ export default function AnalyticsPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-800 text-sm text-center py-10">Sin datos</p>
+              <p className="text-black text-sm text-center py-10">Sin datos</p>
             )}
           </CardContent>
         </Card>
@@ -331,7 +331,7 @@ export default function AnalyticsPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-800 text-sm text-center py-10">Sin datos</p>
+              <p className="text-black text-sm text-center py-10">Sin datos</p>
             )}
           </CardContent>
         </Card>
@@ -348,25 +348,25 @@ export default function AnalyticsPage() {
               <p className="text-2xl font-bold text-amber-600">
                 {data.routeEfficiency.totalRoutes}
               </p>
-              <p className="text-xs text-gray-900">Rutas</p>
+              <p className="text-xs text-black">Rutas</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-amber-600">
                 {data.routeEfficiency.totalDistance.toFixed(1)} km
               </p>
-              <p className="text-xs text-gray-900">Distancia Total</p>
+              <p className="text-xs text-black">Distancia Total</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-amber-600">
                 ${data.routeEfficiency.totalCost.toLocaleString("es-AR", { maximumFractionDigits: 0 })}
               </p>
-              <p className="text-xs text-gray-900">Costo Total</p>
+              <p className="text-xs text-black">Costo Total</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-amber-600">
                 {data.routeEfficiency.avgStopsPerRoute.toFixed(1)}
               </p>
-              <p className="text-xs text-gray-900">Paradas/Ruta Prom.</p>
+              <p className="text-xs text-black">Paradas/Ruta Prom.</p>
             </div>
           </div>
         </CardContent>

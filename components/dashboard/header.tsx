@@ -10,13 +10,13 @@ export function Header() {
   return (
     <header className="h-16 border-b bg-white flex items-center justify-between px-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-black">
           Bienvenido, {session?.user?.name ?? "Usuario"}
         </h2>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm text-gray-800">
+        <div className="flex items-center gap-2 text-sm text-black">
           <User className="w-4 h-4" />
           <span>{session?.user?.email}</span>
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 capitalize">

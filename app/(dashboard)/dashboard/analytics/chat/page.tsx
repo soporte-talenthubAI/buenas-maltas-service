@@ -81,8 +81,8 @@ export default function AIChatPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Chat IA</h1>
-          <p className="text-sm text-gray-900">
+          <h1 className="text-2xl font-bold text-black">Chat IA</h1>
+          <p className="text-sm text-black">
             Preguntale a la IA sobre tus datos de negocio
           </p>
         </div>
@@ -94,10 +94,10 @@ export default function AIChatPage() {
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <Bot className="w-16 h-16 text-gray-500 mb-4" />
-              <p className="text-gray-900 mb-1">
+              <p className="text-black mb-1">
                 Asistente de Inteligencia Comercial
               </p>
-              <p className="text-sm text-gray-800 mb-6">
+              <p className="text-sm text-black mb-6">
                 Hacé preguntas sobre ventas, clientes, productos y rutas.
               </p>
               <div className="flex flex-wrap gap-2 max-w-lg justify-center">
@@ -128,14 +128,14 @@ export default function AIChatPage() {
                     className={`max-w-[80%] rounded-lg px-4 py-3 text-sm whitespace-pre-wrap ${
                       msg.role === "user"
                         ? "bg-amber-600 text-white"
-                        : "bg-gray-100 text-gray-900"
+                        : "bg-gray-100 text-black"
                     }`}
                   >
                     {msg.content}
                   </div>
                   {msg.role === "user" && (
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-gray-800" />
+                      <User className="w-4 h-4 text-black" />
                     </div>
                   )}
                 </div>

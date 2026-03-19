@@ -11,7 +11,7 @@ const STATUS_COLORS: Record<string, string> = {
   confirmado: "bg-blue-100 text-blue-800",
   documentado: "bg-green-100 text-green-800",
   en_ruta: "bg-purple-100 text-purple-800",
-  entregado: "bg-gray-100 text-gray-900",
+  entregado: "bg-gray-100 text-black",
   cancelado: "bg-red-100 text-red-800",
 };
 
@@ -41,7 +41,7 @@ export default async function PedidoDetailPage({
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-black">
             {order.order_number}
           </h1>
           <span
@@ -86,30 +86,30 @@ export default async function PedidoDetailPage({
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-900">Fecha pedido:</span>
+              <span className="text-black">Fecha pedido:</span>
               <span>
                 {new Date(order.order_date).toLocaleDateString("es-AR")}
               </span>
             </div>
             {order.delivery_date && (
               <div className="flex justify-between">
-                <span className="text-gray-900">Fecha entrega:</span>
+                <span className="text-black">Fecha entrega:</span>
                 <span>
                   {new Date(order.delivery_date).toLocaleDateString("es-AR")}
                 </span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-900">Prioridad:</span>
+              <span className="text-black">Prioridad:</span>
               <span className="capitalize">{order.priority}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-900">Creado por:</span>
+              <span className="text-black">Creado por:</span>
               <span>{order.created_by.name}</span>
             </div>
             {order.observations && (
               <div className="pt-2 border-t">
-                <span className="text-gray-900">Observaciones:</span>
+                <span className="text-black">Observaciones:</span>
                 <p className="mt-1">{order.observations}</p>
               </div>
             )}
@@ -123,12 +123,12 @@ export default async function PedidoDetailPage({
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-900">Subtotal:</span>
+              <span className="text-black">Subtotal:</span>
               <span>${Number(order.subtotal).toLocaleString("es-AR")}</span>
             </div>
             {Number(order.discount) > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-900">Descuento:</span>
+                <span className="text-black">Descuento:</span>
                 <span>{Number(order.discount)}%</span>
               </div>
             )}
@@ -150,7 +150,7 @@ export default async function PedidoDetailPage({
         <CardContent>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b text-left text-gray-900">
+              <tr className="border-b text-left text-black">
                 <th className="pb-2">Código</th>
                 <th className="pb-2">Producto</th>
                 <th className="pb-2 text-right">Cant.</th>
@@ -161,7 +161,7 @@ export default async function PedidoDetailPage({
             <tbody>
               {order.items.map((item) => (
                 <tr key={item.id} className="border-b">
-                  <td className="py-2 text-gray-900">{item.product_code}</td>
+                  <td className="py-2 text-black">{item.product_code}</td>
                   <td className="py-2">{item.product_name}</td>
                   <td className="py-2 text-right">{Number(item.quantity)}</td>
                   <td className="py-2 text-right">
@@ -187,7 +187,7 @@ export default async function PedidoDetailPage({
         </CardHeader>
         <CardContent>
           {order.documents.length === 0 ? (
-            <p className="text-gray-900 text-sm">
+            <p className="text-black text-sm">
               No hay documentos generados para este pedido.
             </p>
           ) : (
@@ -201,7 +201,7 @@ export default async function PedidoDetailPage({
                     <span className="font-medium text-sm">
                       {DOC_TYPE_LABELS[doc.type] ?? doc.type}
                     </span>
-                    <span className="text-xs text-gray-900 ml-2">
+                    <span className="text-xs text-black ml-2">
                       {doc.number}
                     </span>
                   </div>
@@ -213,12 +213,12 @@ export default async function PedidoDetailPage({
                           ? "bg-green-100 text-green-800"
                           : doc.status === "anulado"
                             ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-900"
+                            : "bg-gray-100 text-black"
                       )}
                     >
                       {doc.status}
                     </span>
-                    <span className="text-xs text-gray-800">
+                    <span className="text-xs text-black">
                       {new Date(doc.created_at).toLocaleDateString("es-AR")}
                     </span>
                   </div>
