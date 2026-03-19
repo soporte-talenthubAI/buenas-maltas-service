@@ -16,7 +16,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-gray-700">
           <User className="w-4 h-4" />
           <span>{session?.user?.email}</span>
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 capitalize">

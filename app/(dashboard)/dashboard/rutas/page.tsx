@@ -141,7 +141,7 @@ export default function RutasPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-xs text-gray-700">Rutas totales</p>
+                <p className="text-xs text-gray-800">Rutas totales</p>
               </div>
             </div>
           </CardContent>
@@ -154,7 +154,7 @@ export default function RutasPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.completadas}</p>
-                <p className="text-xs text-gray-700">Completadas</p>
+                <p className="text-xs text-gray-800">Completadas</p>
               </div>
             </div>
           </CardContent>
@@ -169,7 +169,7 @@ export default function RutasPage() {
                 <p className="text-2xl font-bold">
                   {stats.totalDistance.toFixed(1)} km
                 </p>
-                <p className="text-xs text-gray-700">Distancia total</p>
+                <p className="text-xs text-gray-800">Distancia total</p>
               </div>
             </div>
           </CardContent>
@@ -182,7 +182,7 @@ export default function RutasPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalStops}</p>
-                <p className="text-xs text-gray-700">Entregas totales</p>
+                <p className="text-xs text-gray-800">Entregas totales</p>
               </div>
             </div>
           </CardContent>
@@ -191,26 +191,26 @@ export default function RutasPage() {
 
       {/* Status summary bar */}
       <div className="flex items-center gap-4 mb-4 text-sm flex-wrap">
-        <span className="text-gray-700 flex items-center gap-1">
+        <span className="text-gray-800 flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-blue-500"></span>
           Planificadas: {stats.planificadas}
         </span>
-        <span className="text-gray-700 flex items-center gap-1">
+        <span className="text-gray-800 flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-amber-500"></span>
           En curso: {stats.enCurso}
         </span>
-        <span className="text-gray-700 flex items-center gap-1">
+        <span className="text-gray-800 flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-green-500"></span>
           Completadas: {stats.completadas}
         </span>
         {stats.canceladas > 0 && (
-          <span className="text-gray-700 flex items-center gap-1">
+          <span className="text-gray-800 flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-red-500"></span>
             Canceladas: {stats.canceladas}
           </span>
         )}
         {stats.totalCost > 0 && (
-          <span className="text-gray-700 ml-auto">
+          <span className="text-gray-800 ml-auto">
             Costo total: ${stats.totalCost.toFixed(0)}
           </span>
         )}
@@ -222,7 +222,7 @@ export default function RutasPage() {
           <CardContent className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="text-xs text-gray-700 mb-1 block">Estado</label>
+                <label className="text-xs text-gray-800 mb-1 block">Estado</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -236,7 +236,7 @@ export default function RutasPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-gray-700 mb-1 block">Chofer</label>
+                <label className="text-xs text-gray-800 mb-1 block">Chofer</label>
                 <select
                   value={driverFilter}
                   onChange={(e) => setDriverFilter(e.target.value)}
@@ -251,7 +251,7 @@ export default function RutasPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-gray-700 mb-1 block">Desde</label>
+                <label className="text-xs text-gray-800 mb-1 block">Desde</label>
                 <input
                   type="date"
                   value={dateFrom}
@@ -260,7 +260,7 @@ export default function RutasPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-700 mb-1 block">Hasta</label>
+                <label className="text-xs text-gray-800 mb-1 block">Hasta</label>
                 <input
                   type="date"
                   value={dateTo}
@@ -286,15 +286,15 @@ export default function RutasPage() {
       ) : routes.length === 0 ? (
         <Card>
           <CardContent className="py-20 text-center">
-            <RouteIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-700">
+            <RouteIcon className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-800">
               {hasActiveFilters
                 ? "No se encontraron rutas con los filtros seleccionados."
                 : "No hay rutas generadas."}
             </p>
             {!hasActiveFilters && (
               <>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-700 mt-1">
                   Generá una ruta desde pedidos documentados.
                 </p>
                 <Link href="/dashboard/rutas/generar">
@@ -336,7 +336,7 @@ export default function RutasPage() {
                     </div>
                     <div>
                       <p className="font-medium">{route.route_code}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-700 mt-1">
+                      <div className="flex items-center gap-3 text-xs text-gray-800 mt-1">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {new Date(route.scheduled_date).toLocaleDateString("es-AR")}
@@ -354,12 +354,12 @@ export default function RutasPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {route.total_distance_km && (
-                      <span className="text-sm text-gray-700 hidden md:inline">
+                      <span className="text-sm text-gray-800 hidden md:inline">
                         {Number(route.total_distance_km).toFixed(1)} km
                       </span>
                     )}
                     {route.estimated_duration && (
-                      <span className="text-sm text-gray-700 hidden md:inline">
+                      <span className="text-sm text-gray-800 hidden md:inline">
                         {route.estimated_duration} min
                       </span>
                     )}

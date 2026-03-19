@@ -66,7 +66,7 @@ export default function SettingsPage() {
             "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
             activeTab === "deposito"
               ? "border-amber-600 text-amber-700"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              : "border-transparent text-gray-700 hover:text-gray-800"
           )}
         >
           <Warehouse className="w-4 h-4" />
@@ -78,7 +78,7 @@ export default function SettingsPage() {
             "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
             activeTab === "choferes"
               ? "border-amber-600 text-amber-700"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              : "border-transparent text-gray-700 hover:text-gray-800"
           )}
         >
           <Users className="w-4 h-4" />
@@ -204,13 +204,13 @@ function DepotSection() {
             <Warehouse className="w-5 h-5 text-amber-600" />
             Configuracion del Deposito
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-700">
             Punto de partida y llegada para la generacion de rutas.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm text-gray-700 mb-1 block">
+            <label className="text-sm text-gray-800 mb-1 block">
               Nombre del deposito
             </label>
             <Input
@@ -222,7 +222,7 @@ function DepotSection() {
 
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="text-sm text-gray-700 mb-1 block">Calle</label>
+              <label className="text-sm text-gray-800 mb-1 block">Calle</label>
               <Input
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
@@ -230,7 +230,7 @@ function DepotSection() {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-700 mb-1 block">
+              <label className="text-sm text-gray-800 mb-1 block">
                 Numero
               </label>
               <Input
@@ -243,7 +243,7 @@ function DepotSection() {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-sm text-gray-700 mb-1 block">
+              <label className="text-sm text-gray-800 mb-1 block">
                 Localidad
               </label>
               <Input
@@ -253,7 +253,7 @@ function DepotSection() {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-700 mb-1 block">
+              <label className="text-sm text-gray-800 mb-1 block">
                 Provincia
               </label>
               <Input
@@ -263,7 +263,7 @@ function DepotSection() {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-700 mb-1 block">
+              <label className="text-sm text-gray-800 mb-1 block">
                 Codigo Postal
               </label>
               <Input
@@ -277,7 +277,7 @@ function DepotSection() {
           {/* Geocoding */}
           <div className="pt-2 border-t">
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <label className="text-sm font-medium text-gray-800 flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
                 Coordenadas
               </label>
@@ -297,7 +297,7 @@ function DepotSection() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-gray-600 mb-1 block">
+                <label className="text-xs text-gray-700 mb-1 block">
                   Latitud
                 </label>
                 <Input
@@ -309,7 +309,7 @@ function DepotSection() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-600 mb-1 block">
+                <label className="text-xs text-gray-700 mb-1 block">
                   Longitud
                 </label>
                 <Input
@@ -325,7 +325,7 @@ function DepotSection() {
 
           {/* Radius */}
           <div>
-            <label className="text-sm text-gray-700 mb-1 block">
+            <label className="text-sm text-gray-800 mb-1 block">
               Radio de validacion (metros)
             </label>
             <Input
@@ -334,7 +334,7 @@ function DepotSection() {
               type="number"
               placeholder="200"
             />
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-700 mt-1">
               Distancia maxima para validar check-in/check-out del repartidor.
             </p>
           </div>
@@ -511,7 +511,7 @@ function DriversSection() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-700">
             {activeDrivers.length} activos
             {inactiveDrivers.length > 0 &&
               ` · ${inactiveDrivers.length} inactivos`}
@@ -545,7 +545,7 @@ function DriversSection() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-gray-700 mb-1 block">
+                <label className="text-sm text-gray-800 mb-1 block">
                   Nombre completo
                 </label>
                 <Input
@@ -555,7 +555,7 @@ function DriversSection() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-700 mb-1 block">
+                <label className="text-sm text-gray-800 mb-1 block">
                   Email
                 </label>
                 <Input
@@ -568,7 +568,7 @@ function DriversSection() {
             </div>
 
             <div>
-              <label className="text-sm text-gray-700 mb-1 block">
+              <label className="text-sm text-gray-800 mb-1 block">
                 Contraseña{editingId && " (dejar vacio para no cambiar)"}
               </label>
               <Input
@@ -604,9 +604,9 @@ function DriversSection() {
       {drivers.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <Truck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-700">No hay choferes registrados.</p>
-            <p className="text-sm text-gray-600 mt-1">
+            <Truck className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-800">No hay choferes registrados.</p>
+            <p className="text-sm text-gray-700 mt-1">
               Crea el primer chofer para asignarle rutas de entrega.
             </p>
           </CardContent>
@@ -645,14 +645,14 @@ function DriversSection() {
                             "px-2 py-0.5 rounded-full text-xs font-medium",
                             driver.is_active
                               ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-600"
+                              : "bg-gray-100 text-gray-700"
                           )}
                         >
                           {driver.is_active ? "Activo" : "Inactivo"}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600">{driver.email}</p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <p className="text-sm text-gray-700">{driver.email}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-700">
                         <span>
                           {driver._count.routes_as_driver} rutas asignadas
                         </span>
@@ -682,7 +682,7 @@ function DriversSection() {
                       title={driver.is_active ? "Desactivar" : "Activar"}
                     >
                       {driver.is_active ? (
-                        <UserX className="w-4 h-4 text-gray-500" />
+                        <UserX className="w-4 h-4 text-gray-700" />
                       ) : (
                         <UserCheck className="w-4 h-4 text-green-600" />
                       )}
@@ -693,7 +693,7 @@ function DriversSection() {
                       onClick={() => handleEdit(driver)}
                       title="Editar"
                     >
-                      <Pencil className="w-4 h-4 text-gray-500" />
+                      <Pencil className="w-4 h-4 text-gray-700" />
                     </Button>
                     <Button
                       variant="ghost"

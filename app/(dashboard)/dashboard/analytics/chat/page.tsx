@@ -82,7 +82,7 @@ export default function AIChatPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Chat IA</h1>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-800">
             Preguntale a la IA sobre tus datos de negocio
           </p>
         </div>
@@ -93,11 +93,11 @@ export default function AIChatPage() {
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <Bot className="w-16 h-16 text-gray-400 mb-4" />
-              <p className="text-gray-700 mb-1">
+              <Bot className="w-16 h-16 text-gray-500 mb-4" />
+              <p className="text-gray-800 mb-1">
                 Asistente de Inteligencia Comercial
               </p>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-gray-700 mb-6">
                 Hacé preguntas sobre ventas, clientes, productos y rutas.
               </p>
               <div className="flex flex-wrap gap-2 max-w-lg justify-center">
@@ -135,7 +135,7 @@ export default function AIChatPage() {
                   </div>
                   {msg.role === "user" && (
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-gray-600" />
+                      <User className="w-4 h-4 text-gray-700" />
                     </div>
                   )}
                 </div>
@@ -146,7 +146,7 @@ export default function AIChatPage() {
                     <Bot className="w-4 h-4 text-amber-600" />
                   </div>
                   <div className="bg-gray-100 rounded-lg px-4 py-3">
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
                   </div>
                 </div>
               )}

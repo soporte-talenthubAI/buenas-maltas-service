@@ -211,7 +211,7 @@ export default function RouteDetailPage() {
                 {route.status.replace("_", " ")}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-sm text-gray-700 mt-1">
+            <div className="flex items-center gap-4 text-sm text-gray-800 mt-1">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {new Date(route.scheduled_date).toLocaleDateString("es-AR")}
@@ -294,14 +294,14 @@ export default function RouteDetailPage() {
           <CardContent className="p-4 text-center">
             <Package className="w-5 h-5 text-amber-600 mx-auto mb-1" />
             <p className="text-2xl font-bold">{route.route_orders.length}</p>
-            <p className="text-xs text-gray-700">Paradas</p>
+            <p className="text-xs text-gray-800">Paradas</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <CheckCircle className="w-5 h-5 text-green-600 mx-auto mb-1" />
             <p className="text-2xl font-bold text-green-700">{delivered}</p>
-            <p className="text-xs text-gray-700">Entregados</p>
+            <p className="text-xs text-gray-800">Entregados</p>
           </CardContent>
         </Card>
         {route.total_distance_km && (
@@ -311,7 +311,7 @@ export default function RouteDetailPage() {
               <p className="text-2xl font-bold">
                 {Number(route.total_distance_km).toFixed(1)} km
               </p>
-              <p className="text-xs text-gray-700">Distancia</p>
+              <p className="text-xs text-gray-800">Distancia</p>
             </CardContent>
           </Card>
         )}
@@ -322,7 +322,7 @@ export default function RouteDetailPage() {
               <p className="text-2xl font-bold">
                 {route.estimated_duration} min
               </p>
-              <p className="text-xs text-gray-700">Duracion</p>
+              <p className="text-xs text-gray-800">Duracion</p>
             </CardContent>
           </Card>
         )}
@@ -333,7 +333,7 @@ export default function RouteDetailPage() {
               <p className="text-2xl font-bold">
                 ${Number(route.fuel_cost).toFixed(0)}
               </p>
-              <p className="text-xs text-gray-700">Combustible</p>
+              <p className="text-xs text-gray-800">Combustible</p>
             </CardContent>
           </Card>
         )}
@@ -344,7 +344,7 @@ export default function RouteDetailPage() {
               <p className="text-2xl font-bold">
                 ${Number(route.total_cost).toFixed(0)}
               </p>
-              <p className="text-xs text-gray-700">Costo Total</p>
+              <p className="text-xs text-gray-800">Costo Total</p>
             </CardContent>
           </Card>
         )}
@@ -354,10 +354,10 @@ export default function RouteDetailPage() {
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-medium text-gray-800">
               Progreso de entregas
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-700">
               {delivered}/{route.route_orders.length} entregados
               {notDelivered > 0 && ` · ${notDelivered} no entregados`}
               {pending > 0 && ` · ${pending} pendientes`}
@@ -383,7 +383,7 @@ export default function RouteDetailPage() {
               )}
             </div>
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-700">
             <span>Valor total: ${totalValue.toLocaleString("es-AR")}</span>
             <span>
               Valor entregado: ${deliveredValue.toLocaleString("es-AR")}
@@ -468,13 +468,13 @@ export default function RouteDetailPage() {
                       </span>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-700 flex items-center gap-1 mt-1">
+                  <p className="text-xs text-gray-800 flex items-center gap-1 mt-1">
                     <MapPin className="w-3 h-3" />
                     {ro.order.customer.street} {ro.order.customer.street_number},{" "}
                     {ro.order.customer.locality}
                   </p>
                   <div className="flex items-center gap-3 mt-1">
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       Pedido: {ro.order.order_number}
                     </p>
                     {ro.order.customer.phone && (
@@ -497,7 +497,7 @@ export default function RouteDetailPage() {
                     )}
                   </div>
                   {ro.delivery_notes && (
-                    <p className="text-xs text-gray-600 mt-1 italic">
+                    <p className="text-xs text-gray-700 mt-1 italic">
                       Nota: {ro.delivery_notes}
                     </p>
                   )}

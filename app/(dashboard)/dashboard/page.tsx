@@ -51,7 +51,7 @@ export default function DashboardPage() {
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">
+              <CardTitle className="text-sm font-medium text-gray-800">
                 {stat.title}
               </CardTitle>
               <div className={`p-2 rounded-lg ${stat.color}`}>
@@ -60,7 +60,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-gray-700 mt-1">{stat.description}</p>
+              <p className="text-xs text-gray-800 mt-1">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
@@ -72,7 +72,7 @@ export default function DashboardPage() {
             <CardTitle>Últimos Pedidos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 text-sm">
+            <p className="text-gray-800 text-sm">
               Los pedidos se cargarán desde el módulo de pedidos.
             </p>
           </CardContent>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
             <CardTitle>Rutas del Día</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 text-sm">
+            <p className="text-gray-800 text-sm">
               Las rutas se cargarán desde el módulo de rutas inteligentes.
             </p>
           </CardContent>
