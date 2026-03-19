@@ -165,7 +165,7 @@ export default function DocumentosPage() {
               <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
             </div>
           ) : docs.length === 0 ? (
-            <p className="text-gray-800 text-center py-12">
+            <p className="text-gray-900 text-center py-12">
               {search
                 ? "No se encontraron documentos con ese criterio."
                 : "No hay documentos generados. Generá documentos desde la sección de Pedidos."}
@@ -174,7 +174,7 @@ export default function DocumentosPage() {
             <>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-gray-800">
+                  <tr className="border-b text-left text-gray-900">
                     <th className="pb-3">Número</th>
                     <th className="pb-3">Tipo</th>
                     <th className="pb-3">Pedido</th>
@@ -210,13 +210,13 @@ export default function DocumentosPage() {
                               ? "bg-green-100 text-green-800"
                               : doc.status === "anulado"
                                 ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
+                                : "bg-gray-100 text-gray-900"
                           )}
                         >
                           {doc.status}
                         </span>
                       </td>
-                      <td className="py-3 text-gray-800">
+                      <td className="py-3 text-gray-900">
                         {new Date(doc.created_at).toLocaleDateString("es-AR")}
                       </td>
                       <td className="py-3 text-right">
@@ -246,7 +246,7 @@ export default function DocumentosPage() {
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-gray-900">
                     Página {page} de {totalPages}
                   </p>
                   <div className="flex gap-2">
@@ -291,7 +291,7 @@ export default function DocumentosPage() {
                     <h2 className="text-lg font-bold">
                       {TYPE_LABELS[preview.type]} {preview.number}
                     </h2>
-                    <p className="text-sm text-gray-800">
+                    <p className="text-sm text-gray-900">
                       Pedido: {preview.order.order_number}
                     </p>
                   </div>
@@ -329,7 +329,7 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
   const data = doc.data;
   if (!data) {
     return (
-      <p className="text-gray-800">
+      <p className="text-gray-900">
         Sin datos de previsualización disponibles.
       </p>
     );
@@ -341,12 +341,12 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
       <div className="flex justify-between">
         <div>
           <p className="text-xl font-bold text-amber-700">Buenas Maltas</p>
-          <p className="text-gray-800">Cervecería Artesanal</p>
+          <p className="text-gray-900">Cervecería Artesanal</p>
         </div>
         <div className="text-right">
           <p className="font-bold text-lg">{TYPE_LABELS[doc.type]}</p>
-          <p className="text-gray-700">N° {doc.number}</p>
-          <p className="text-gray-800">
+          <p className="text-gray-800">N° {doc.number}</p>
+          <p className="text-gray-900">
             {new Date(data.date).toLocaleDateString("es-AR")}
           </p>
         </div>
@@ -356,27 +356,27 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
 
       {/* Customer */}
       <div>
-        <p className="text-xs text-gray-800 uppercase tracking-wider mb-1">
+        <p className="text-xs text-gray-900 uppercase tracking-wider mb-1">
           Cliente
         </p>
         <p className="font-medium">{data.customer.name}</p>
         {data.customer.cuit && (
-          <p className="text-gray-700">CUIT: {data.customer.cuit}</p>
+          <p className="text-gray-800">CUIT: {data.customer.cuit}</p>
         )}
-        <p className="text-gray-700">{data.customer.address}</p>
+        <p className="text-gray-800">{data.customer.address}</p>
         {data.customer.iva_condition && (
-          <p className="text-gray-700">IVA: {data.customer.iva_condition}</p>
+          <p className="text-gray-800">IVA: {data.customer.iva_condition}</p>
         )}
       </div>
 
       {/* Items */}
       <div>
-        <p className="text-xs text-gray-800 uppercase tracking-wider mb-2">
+        <p className="text-xs text-gray-900 uppercase tracking-wider mb-2">
           Detalle
         </p>
         <table className="w-full">
           <thead>
-            <tr className="border-b text-left text-gray-800 text-xs">
+            <tr className="border-b text-left text-gray-900 text-xs">
               <th className="pb-2">Código</th>
               <th className="pb-2">Producto</th>
               <th className="pb-2 text-right">Cant.</th>
@@ -387,7 +387,7 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
           <tbody>
             {data.items.map((item, i) => (
               <tr key={i} className="border-b">
-                <td className="py-2 text-gray-700">{item.code}</td>
+                <td className="py-2 text-gray-800">{item.code}</td>
                 <td className="py-2">{item.name}</td>
                 <td className="py-2 text-right">{item.quantity}</td>
                 <td className="py-2 text-right">
@@ -406,7 +406,7 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
       <div className="flex justify-end">
         <div className="w-48 space-y-1">
           <div className="flex justify-between">
-            <span className="text-gray-800">Subtotal:</span>
+            <span className="text-gray-900">Subtotal:</span>
             <span>${data.subtotal.toLocaleString("es-AR")}</span>
           </div>
           {data.discount > 0 && (

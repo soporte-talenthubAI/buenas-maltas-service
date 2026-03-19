@@ -116,11 +116,11 @@ export default function RutaActivaPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()}>
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
+          <ArrowLeft className="w-5 h-5 text-gray-800" />
         </button>
         <div className="flex-1">
           <h1 className="text-lg font-bold">{route.route_code}</h1>
-          <div className="flex items-center gap-3 text-xs text-gray-800">
+          <div className="flex items-center gap-3 text-xs text-gray-900">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {new Date(route.scheduled_date).toLocaleDateString("es-AR")}
@@ -145,7 +145,7 @@ export default function RutaActivaPage() {
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-lg font-bold">{total}</p>
-            <p className="text-xs text-gray-800">Paradas</p>
+            <p className="text-xs text-gray-900">Paradas</p>
           </CardContent>
         </Card>
         {route.total_distance_km && (
@@ -154,7 +154,7 @@ export default function RutaActivaPage() {
               <p className="text-lg font-bold">
                 {Number(route.total_distance_km).toFixed(1)}
               </p>
-              <p className="text-xs text-gray-800">km</p>
+              <p className="text-xs text-gray-900">km</p>
             </CardContent>
           </Card>
         )}
@@ -162,7 +162,7 @@ export default function RutaActivaPage() {
           <Card>
             <CardContent className="p-3 text-center">
               <p className="text-lg font-bold">{route.estimated_duration}</p>
-              <p className="text-xs text-gray-800">min</p>
+              <p className="text-xs text-gray-900">min</p>
             </CardContent>
           </Card>
         )}
@@ -227,12 +227,12 @@ export default function RutaActivaPage() {
                       {ro.status.replace("_", " ")}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-800 flex items-center gap-1 mt-1">
+                  <p className="text-xs text-gray-900 flex items-center gap-1 mt-1">
                     <MapPin className="w-3 h-3" />
                     {ro.order.customer.street} {ro.order.customer.street_number},{" "}
                     {ro.order.customer.locality}
                   </p>
-                  <p className="text-xs text-gray-700 mt-0.5">
+                  <p className="text-xs text-gray-800 mt-0.5">
                     {ro.order.order_number} · $
                     {Number(ro.order.total).toLocaleString("es-AR")}
                   </p>
