@@ -20,11 +20,12 @@ interface Message {
 
 const SUGGESTIONS = [
   "Dame un resumen ejecutivo del negocio",
-  "Cómo estamos este mes comparado con el anterior?",
-  "Cuáles son los clientes que más compran y cuáles están inactivos?",
-  "Qué producto me conviene impulsar y por qué?",
-  "Analizá la eficiencia de las rutas de entrega",
-  "Qué alertas o problemas detectás en los datos?",
+  "Haceme un análisis Pareto de clientes",
+  "Compará las ventas por marca (Träumer vs Vitea vs Beermut vs Mixology)",
+  "Qué canales de venta son más rentables?",
+  "Cuáles son los meses de mayor venta y por qué?",
+  "Qué clientes reciben más descuento y se justifica?",
+  "Analizá la estacionalidad de productos",
   "Sugerí 3 acciones concretas para mejorar las ventas",
 ];
 

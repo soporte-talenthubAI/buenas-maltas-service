@@ -10,6 +10,7 @@ import {
   Route,
   BarChart3,
   Settings,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -17,7 +18,8 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/pedidos", label: "Pedidos", icon: ClipboardList },
   { href: "/dashboard/documentos", label: "Documentos", icon: FileText },
-  { href: "/dashboard/rutas", label: "Rutas", icon: Route },
+  { href: "/dashboard/rutas", label: "Rutas Entrega", icon: Route },
+  { href: "/dashboard/visitas", label: "Visitas Vendedor", icon: MapPin },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Configuración", icon: Settings },
 ];

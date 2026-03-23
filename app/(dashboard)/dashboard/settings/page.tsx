@@ -19,6 +19,7 @@ import {
   UserX,
   X,
   Truck,
+  ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -47,7 +48,17 @@ interface Driver {
   _count: { routes_as_driver: number };
 }
 
-type Tab = "deposito" | "choferes";
+interface Vendedor {
+  id: string;
+  name: string;
+  email: string;
+  is_active: boolean;
+  last_access: string | null;
+  created_at: string;
+  _count: { visit_routes: number; created_orders: number };
+}
+
+type Tab = "deposito" | "choferes" | "vendedores";
 
 // ─── Main Page ───────────────────────────────────────────────────
 
@@ -84,10 +95,23 @@ export default function SettingsPage() {
           <Users className="w-4 h-4" />
           Choferes
         </button>
+        <button
+          onClick={() => setActiveTab("vendedores")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
+            activeTab === "vendedores"
+              ? "border-amber-600 text-amber-700"
+              : "border-transparent text-black hover:text-black"
+          )}
+        >
+          <ShoppingBag className="w-4 h-4" />
+          Vendedores
+        </button>
       </div>
 
       {activeTab === "deposito" && <DepotSection />}
       {activeTab === "choferes" && <DriversSection />}
+      {activeTab === "vendedores" && <VendedoresSection />}
     </div>
   );
 }
@@ -701,6 +725,244 @@ function DriversSection() {
                       onClick={() => handleDelete(driver)}
                       title="Eliminar"
                     >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Vendedores Section ─────────────────────────────────────────
+
+function VendedoresSection() {
+  const [vendedores, setVendedores] = useState<Vendedor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [formName, setFormName] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [formPassword, setFormPassword] = useState("");
+
+  const fetchVendedores = useCallback(async () => {
+    try {
+      const res = await fetch("/api/vendedores");
+      const data = await res.json();
+      setVendedores(data);
+    } catch {
+      // Error fetching
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVendedores();
+  }, [fetchVendedores]);
+
+  const resetForm = () => {
+    setFormName("");
+    setFormEmail("");
+    setFormPassword("");
+    setEditingId(null);
+    setShowForm(false);
+    setError(null);
+  };
+
+  const handleEdit = (v: Vendedor) => {
+    setFormName(v.name);
+    setFormEmail(v.email);
+    setFormPassword("");
+    setEditingId(v.id);
+    setShowForm(true);
+    setError(null);
+  };
+
+  const handleSave = async () => {
+    if (!formName || !formEmail) {
+      setError("Nombre y email son requeridos");
+      return;
+    }
+    if (!editingId && !formPassword) {
+      setError("La contraseña es requerida para nuevos vendedores");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const url = editingId ? `/api/vendedores/${editingId}` : "/api/vendedores";
+      const method = editingId ? "PATCH" : "POST";
+
+      const body: Record<string, string> = { name: formName, email: formEmail };
+      if (formPassword) body.password = formPassword;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Error al guardar");
+        return;
+      }
+
+      resetForm();
+      await fetchVendedores();
+    } catch {
+      setError("Error de conexion");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleActive = async (v: Vendedor) => {
+    try {
+      await fetch(`/api/vendedores/${v.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !v.is_active }),
+      });
+      await fetchVendedores();
+    } catch {
+      // Error toggling
+    }
+  };
+
+  const handleDelete = async (v: Vendedor) => {
+    if (!confirm(`Estas seguro de eliminar a ${v.name}?`)) return;
+    try {
+      await fetch(`/api/vendedores/${v.id}`, { method: "DELETE" });
+      await fetchVendedores();
+    } catch {
+      // Error deleting
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+      </div>
+    );
+  }
+
+  const active = vendedores.filter((v) => v.is_active);
+  const inactive = vendedores.filter((v) => !v.is_active);
+
+  return (
+    <div className="max-w-3xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-black">
+            {active.length} activos
+            {inactive.length > 0 && ` · ${inactive.length} inactivos`}
+          </p>
+        </div>
+        {!showForm && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="w-4 h-4" />
+            Nuevo Vendedor
+          </Button>
+        )}
+      </div>
+
+      {showForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>{editingId ? "Editar Vendedor" : "Nuevo Vendedor"}</span>
+              <Button variant="ghost" size="icon" onClick={resetForm}>
+                <X className="w-4 h-4" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm text-black mb-1 block">Nombre completo</label>
+                <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Maria Lopez" />
+              </div>
+              <div>
+                <label className="text-sm text-black mb-1 block">Email</label>
+                <Input value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="vendedor@buenasmaltas.com" type="email" />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm text-black mb-1 block">
+                Contraseña{editingId && " (dejar vacio para no cambiar)"}
+              </label>
+              <Input value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder={editingId ? "••••••••" : "Minimo 6 caracteres"} type="password" />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSave} disabled={saving} className="flex-1">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {editingId ? "Guardar Cambios" : "Crear Vendedor"}
+              </Button>
+              <Button variant="outline" onClick={resetForm}>Cancelar</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {vendedores.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <ShoppingBag className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <p className="text-black">No hay vendedores registrados.</p>
+            <p className="text-sm text-black mt-1">Crea el primer vendedor para asignarle rutas de visita.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {vendedores.map((v) => (
+            <Card key={v.id} className={cn("transition-opacity", !v.is_active && "opacity-60")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm", v.is_active ? "bg-amber-600" : "bg-gray-400")}>
+                      {v.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{v.name}</p>
+                        <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", v.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-black")}>
+                          {v.is_active ? "Activo" : "Inactivo"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-black">{v.email}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-black">
+                        <span>{v._count.visit_routes} rutas de visita</span>
+                        <span>{v._count.created_orders} pedidos creados</span>
+                        <span>Creado: {new Date(v.created_at).toLocaleDateString("es-AR")}</span>
+                        {v.last_access && <span>Ultimo acceso: {new Date(v.last_access).toLocaleDateString("es-AR")}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => handleToggleActive(v)} title={v.is_active ? "Desactivar" : "Activar"}>
+                      {v.is_active ? <UserX className="w-4 h-4 text-black" /> : <UserCheck className="w-4 h-4 text-green-600" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(v)} title="Editar">
+                      <Pencil className="w-4 h-4 text-black" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(v)} title="Eliminar">
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </div>

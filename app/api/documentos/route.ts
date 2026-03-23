@@ -39,12 +39,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const documents = await documentosService.generateForOrder(orderId, types);
-    return NextResponse.json({ documents }, { status: 201 });
-  } catch (error) {
+    const result = await documentosService.generateForOrder(orderId, types);
     return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
+      { documents: result.documents, skipped: result.skipped },
+      { status: 201 }
     );
+  } catch (error) {
+    const message = (error as Error).message;
+    const status = message.includes("ya tiene todos los documentos generados")
+      ? 409
+      : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

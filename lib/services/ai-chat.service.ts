@@ -12,6 +12,17 @@ const SYSTEM_PROMPT = `Sos un asistente experto en inteligencia comercial para "
 - Asesor estratégico para una PyME cervecera
 - Experto en logística de entregas y ruteo
 
+## MARCAS Y PRODUCTOS
+Buenas Maltas produce y distribuye las siguientes marcas:
+- **Träumer**: Cerveza artesanal (latas 473ml y barriles 20L/30L). Marca principal.
+- **Vitea**: Kombucha (latas 473ml, sabores: Hibisco, Jengibre, Maracuyá)
+- **Beermut**: Vermut con cerveza (latas 473ml, con y sin tónica)
+- **Mixology**: Cócteles listos sin alcohol (latas 473ml: Mojito, Caipirinha, Vino+Frutos, Maracuyá)
+- **Servicio a Terceros**: Producción para marcas externas (Safrafe, etc.)
+
+## CANALES DE VENTA
+Bar / Restaurante, Tienda de bebidas A, Tienda de bebidas B, Drugstore / Autoservicios, Supermercado, Distribuidor, Consumidor Final
+
 ## CÓMO RESPONDER
 - Siempre en español argentino (vos, usá, fijate, etc.)
 - Sé conciso pero con datos concretos (números, porcentajes, comparaciones)
@@ -22,19 +33,21 @@ const SYSTEM_PROMPT = `Sos un asistente experto en inteligencia comercial para "
 - Si no tenés datos suficientes para responder algo, decilo claramente
 
 ## QUÉ PODÉS ANALIZAR
-1. **Ventas**: tendencias, comparativas mensuales, ticket promedio, crecimiento
-2. **Clientes**: ranking, frecuencia de compra, clientes inactivos, concentración de ventas
-3. **Productos**: más vendidos, rentabilidad, mix de productos, estacionalidad
-4. **Logística**: eficiencia de rutas, tasa de entrega, costos de distribución
-5. **Documentos**: estado de facturación, remitos pendientes
-6. **Estrategia**: sugerencias de mejora, alertas operativas, oportunidades
+1. **Ventas**: tendencias mensuales, comparativas, ticket promedio, crecimiento
+2. **Clientes**: ranking Pareto (80/20), frecuencia de compra, inactivos, concentración
+3. **Productos**: más vendidos por marca, rentabilidad, mix latas/barriles, estacionalidad
+4. **Canales**: facturación por tipo de comercio, márgenes por canal
+5. **Vendedores**: rendimiento, conversión, historial
+6. **Descuentos**: análisis por cliente, montos, porcentajes
+7. **Logística**: eficiencia de rutas, tasa de entrega, costos
+8. **Estrategia**: sugerencias de mejora, alertas, oportunidades
 
 ## FORMATO DE MONEDA
 - Usá formato argentino: $1.234.567 (punto como separador de miles)
 - Para porcentajes: 15,3% (coma decimal)
 
 ## CONTEXTO DEL NEGOCIO
-Buenas Maltas es una cervecería artesanal que produce y distribuye cerveza en Córdoba capital y alrededores. Los productos incluyen distintas variedades (IPA, Stout, Blonde, Red Ale, Wheat) en formatos de 500ml, 1L y barriles (20L, 50L). Los clientes son bares, restaurantes, hoteles, supermercados y distribuidoras.`;
+Buenas Maltas produce y distribuye cerveza artesanal, kombucha, vermut y cócteles listos en Córdoba capital y alrededores. Los clientes son bares, restaurantes, tiendas de bebidas, supermercados y distribuidoras. Los datos provienen de facturación real del sistema Tango ERP.`;
 
 function formatCurrency(n: number): string {
   return "$" + Math.round(n).toLocaleString("es-AR");
@@ -62,6 +75,45 @@ function buildContextMessage(ctx: Awaited<ReturnType<typeof analyticsService.get
   lines.push(`- Mes pasado: ${ctx.periods.lastMonth.orders} pedidos | ${formatCurrency(ctx.periods.lastMonth.sales)}`);
   lines.push(`- Crecimiento vs mes anterior: ${ctx.periods.growthVsLastMonth}%`);
 
+  // ─── VENTAS POR MES
+  if (ctx.monthlySales && ctx.monthlySales.length > 0) {
+    lines.push("\n📆 VENTAS POR MES (AÑO ACTUAL)");
+    for (const ms of ctx.monthlySales) {
+      lines.push(`- ${ms.month}: ${formatCurrency(ms.total)}`);
+    }
+  }
+
+  // ─── VENTAS POR MARCA
+  if (ctx.brandTotals && ctx.brandTotals.length > 0) {
+    lines.push("\n🏷️ VENTAS POR MARCA");
+    for (const bt of ctx.brandTotals) {
+      lines.push(`- ${bt.brand}: ${formatCurrency(bt.revenue)} | ${bt.quantity.toFixed(0)} unidades`);
+    }
+  }
+
+  // ─── ANÁLISIS PARETO
+  if (ctx.paretoClients && ctx.paretoClients.length > 0) {
+    lines.push("\n📊 ANÁLISIS PARETO - TOP CLIENTES");
+    for (const pc of ctx.paretoClients) {
+      lines.push(`- ${pc.name}: ${formatCurrency(pc.total)} | ${pc.orders} pedidos | Acumulado: ${pc.cumulativePercent}%`);
+    }
+  }
+
+  // ─── VENTAS POR CANAL
+  if (ctx.salesByChannel && ctx.salesByChannel.length > 0) {
+    lines.push("\n🏪 VENTAS POR CANAL DE VENTA");
+    for (const sc of ctx.salesByChannel) {
+      lines.push(`- ${sc.channel}: ${formatCurrency(sc.revenue)} | ${sc.orders} pedidos`);
+    }
+  }
+
+  // ─── DESCUENTOS
+  if (ctx.discountSummary) {
+    lines.push("\n💰 RESUMEN DE DESCUENTOS");
+    lines.push(`- Total descuentos otorgados: ${formatCurrency(ctx.discountSummary.totalDiscounts)}`);
+    lines.push(`- Descuento promedio: ${ctx.discountSummary.avgDiscountPct}%`);
+  }
+
   // ─── ESTADO DE PEDIDOS
   lines.push("\n📋 ESTADO DE PEDIDOS");
   for (const s of ctx.ordersByStatus) {
@@ -75,14 +127,14 @@ function buildContextMessage(ctx: Awaited<ReturnType<typeof analyticsService.get
 
   // ─── TOP CLIENTES (ALL TIME)
   lines.push("\n👥 TOP CLIENTES (HISTÓRICO)");
-  ctx.topCustomers.forEach((c, i) => {
-    lines.push(`${i + 1}. ${c.name} (${c.locality}): ${formatCurrency(c.total)} | ${c.orders} pedidos | Ticket promedio: ${formatCurrency(c.avgTicket)}`);
+  ctx.topCustomers.slice(0, 15).forEach((c, i) => {
+    lines.push(`${i + 1}. ${c.name} (${c.locality}): ${formatCurrency(c.total)} | ${c.orders} pedidos | Ticket: ${formatCurrency(c.avgTicket)}`);
   });
 
   // ─── TOP CLIENTES ESTE MES
   if (ctx.topCustomersThisMonth.length > 0) {
     lines.push("\n👥 TOP CLIENTES (ESTE MES)");
-    ctx.topCustomersThisMonth.forEach((c, i) => {
+    ctx.topCustomersThisMonth.slice(0, 10).forEach((c, i) => {
       lines.push(`${i + 1}. ${c.name}: ${formatCurrency(c.total)} | ${c.orders} pedidos`);
     });
   }
@@ -90,13 +142,16 @@ function buildContextMessage(ctx: Awaited<ReturnType<typeof analyticsService.get
   // ─── CLIENTES INACTIVOS
   if (ctx.inactiveCustomers.length > 0) {
     lines.push("\n⚠️ CLIENTES SIN PEDIDOS EN ÚLTIMOS 30 DÍAS");
-    ctx.inactiveCustomers.forEach(name => lines.push(`- ${name}`));
+    ctx.inactiveCustomers.slice(0, 15).forEach(name => lines.push(`- ${name}`));
+    if (ctx.inactiveCustomers.length > 15) {
+      lines.push(`... y ${ctx.inactiveCustomers.length - 15} más`);
+    }
   }
 
   // ─── TOP PRODUCTOS
   lines.push("\n🍺 TOP PRODUCTOS (POR FACTURACIÓN)");
-  ctx.topProducts.forEach((p, i) => {
-    lines.push(`${i + 1}. ${p.name} [${p.code}]: ${formatCurrency(p.revenue)} | ${p.quantity} unidades | Precio promedio: ${formatCurrency(p.avgPrice)}`);
+  ctx.topProducts.slice(0, 15).forEach((p, i) => {
+    lines.push(`${i + 1}. ${p.name} [${p.code}]: ${formatCurrency(p.revenue)} | ${p.quantity} unidades | Precio: ${formatCurrency(p.avgPrice)}`);
   });
 
   // ─── DOCUMENTOS
@@ -152,11 +207,11 @@ export const aiChatService = {
           role: "user",
           content: `A continuación tenés todos los datos actualizados del negocio. Usá esta información como base para responder las preguntas del usuario.\n\n${contextMessage}`,
         },
-        { role: "assistant", content: "Perfecto, tengo todos los datos cargados. Estoy listo para analizar y responder tus preguntas sobre Buenas Maltas. ¿Qué necesitás saber?" },
+        { role: "assistant", content: "Perfecto, tengo todos los datos cargados de Buenas Maltas incluyendo ventas por marca, análisis Pareto de clientes, canales de venta y descuentos. Estoy listo para analizar. ¿Qué necesitás saber?" },
         ...messages,
       ],
       temperature: 0.7,
-      max_tokens: 2000,
+      max_tokens: 3000,
     });
 
     return response.choices[0].message.content ?? "No pude generar una respuesta.";

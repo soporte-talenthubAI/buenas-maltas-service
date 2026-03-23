@@ -38,8 +38,11 @@ interface DocDetail {
     order_number: string;
     customer: {
       name: string;
+      contact_name?: string | null;
       cuit: string | null;
       address: string;
+      locality?: string;
+      province?: string;
       iva_condition: string | null;
     };
     items: {
@@ -52,6 +55,7 @@ interface DocDetail {
     subtotal: number;
     discount: number;
     total: number;
+    payment_condition?: string;
     date: string;
   } | null;
   order: {
@@ -335,92 +339,140 @@ function DocumentPreview({ doc }: { doc: DocDetail }) {
     );
   }
 
+  const isRemito = doc.type === "remito";
+
   return (
-    <div className="space-y-6 text-sm">
+    <div className="space-y-4 text-sm">
       {/* Header */}
-      <div className="flex justify-between">
+      <div className="flex justify-between border p-3">
         <div>
-          <p className="text-xl font-bold text-amber-700">Buenas Maltas</p>
-          <p className="text-black">Cervecería Artesanal</p>
+          <p className="text-lg font-bold text-black">BUENAS MALTAS S.A.S</p>
+          <p className="text-xs text-black">CUIT: 30-71630332-9</p>
+          <p className="text-xs text-black">Ruta Nacional 19 km 313 - Monte Cristo</p>
+          <p className="text-xs text-black">Córdoba - 5125</p>
+          <p className="text-xs text-black">info@traumerbier.com.ar</p>
+          <p className="text-xs font-bold text-black mt-1">IVA RESPONSABLE INSCRIPTO</p>
         </div>
-        <div className="text-right">
+        <div className="text-right border-l pl-4">
+          <span className="text-2xl font-bold">{isRemito ? "R" : "A"}</span>
           <p className="font-bold text-lg">{TYPE_LABELS[doc.type]}</p>
-          <p className="text-black">N° {doc.number}</p>
-          <p className="text-black">
-            {new Date(data.date).toLocaleDateString("es-AR")}
+          <p className="text-black">N° 0002 - {(doc.number || "").replace(/[A-Z]+-/, "").padStart(8, "0")}</p>
+          <p className="text-black mt-1">
+            Fecha: {new Date(data.date).toLocaleDateString("es-AR")}
           </p>
         </div>
       </div>
 
-      <hr />
-
       {/* Customer */}
-      <div>
-        <p className="text-xs text-black uppercase tracking-wider mb-1">
-          Cliente
-        </p>
-        <p className="font-medium">{data.customer.name}</p>
-        {data.customer.cuit && (
-          <p className="text-black">CUIT: {data.customer.cuit}</p>
-        )}
-        <p className="text-black">{data.customer.address}</p>
-        {data.customer.iva_condition && (
-          <p className="text-black">IVA: {data.customer.iva_condition}</p>
-        )}
+      <div className="border p-3 space-y-1">
+        <p className="text-xs font-bold text-black">Señor/es:</p>
+        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+          <span className="font-bold text-black">RAZON SOCIAL</span>
+          <span className="text-black">: {data.customer.name}</span>
+          <span className="font-bold text-black">DOMICILIO</span>
+          <span className="text-black">: {data.customer.address} {data.customer.province || "Córdoba"}</span>
+          <span className="font-bold text-black">CUIT</span>
+          <span className="text-black">: {data.customer.cuit || "-"}</span>
+          <span className="font-bold text-black">COND. IVA</span>
+          <span className="text-black">
+            : {data.customer.iva_condition || "-"}
+            <span className="float-right font-bold">{data.payment_condition || "CONTADO"}</span>
+          </span>
+        </div>
       </div>
 
       {/* Items */}
       <div>
-        <p className="text-xs text-black uppercase tracking-wider mb-2">
-          Detalle
-        </p>
-        <table className="w-full">
+        <table className="w-full border">
           <thead>
-            <tr className="border-b text-left text-black text-xs">
-              <th className="pb-2">Código</th>
-              <th className="pb-2">Producto</th>
-              <th className="pb-2 text-right">Cant.</th>
-              <th className="pb-2 text-right">P. Unit.</th>
-              <th className="pb-2 text-right">Subtotal</th>
+            <tr className="bg-gray-100 text-left text-black text-xs border-b">
+              <th className="p-2 border-r">Artículo</th>
+              <th className="p-2 border-r">Descripción</th>
+              <th className="p-2 text-right">Cantidad</th>
+              {!isRemito && <th className="p-2 text-right border-l">P. Unit.</th>}
+              {!isRemito && <th className="p-2 text-right border-l">Subtotal</th>}
             </tr>
           </thead>
           <tbody>
             {data.items.map((item, i) => (
               <tr key={i} className="border-b">
-                <td className="py-2 text-black">{item.code}</td>
-                <td className="py-2">{item.name}</td>
-                <td className="py-2 text-right">{item.quantity}</td>
-                <td className="py-2 text-right">
-                  ${item.unit_price.toLocaleString("es-AR")}
-                </td>
-                <td className="py-2 text-right font-medium">
-                  ${item.subtotal.toLocaleString("es-AR")}
-                </td>
+                <td className="p-2 text-black border-r">{item.code}</td>
+                <td className="p-2 text-black border-r">{item.name}</td>
+                <td className="p-2 text-right text-black">{item.quantity.toFixed(2)}</td>
+                {!isRemito && (
+                  <td className="p-2 text-right text-black border-l">
+                    ${item.unit_price.toLocaleString("es-AR")}
+                  </td>
+                )}
+                {!isRemito && (
+                  <td className="p-2 text-right font-medium text-black border-l">
+                    ${item.subtotal.toLocaleString("es-AR")}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Totals */}
-      <div className="flex justify-end">
-        <div className="w-48 space-y-1">
-          <div className="flex justify-between">
-            <span className="text-black">Subtotal:</span>
-            <span>${data.subtotal.toLocaleString("es-AR")}</span>
-          </div>
-          {data.discount > 0 && (
-            <div className="flex justify-between text-red-600">
-              <span>Descuento:</span>
-              <span>-{data.discount}%</span>
+      {/* Totals (only for non-remito) */}
+      {!isRemito && (
+        <div className="flex justify-end">
+          <div className="w-48 space-y-1">
+            <div className="flex justify-between">
+              <span className="text-black">Subtotal:</span>
+              <span>${data.subtotal.toLocaleString("es-AR")}</span>
             </div>
-          )}
-          <div className="flex justify-between font-bold text-base border-t pt-1">
-            <span>Total:</span>
-            <span>${data.total.toLocaleString("es-AR")}</span>
+            {data.discount > 0 && (
+              <div className="flex justify-between text-red-600">
+                <span>Descuento:</span>
+                <span>-{data.discount}%</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-base border-t pt-1">
+              <span>Total:</span>
+              <span>${data.total.toLocaleString("es-AR")}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Remito-specific sections */}
+      {isRemito && (
+        <>
+          {/* Brands */}
+          <div className="flex justify-around py-2 text-xs font-bold text-gray-500">
+            <span>TRÄUMER BIER</span>
+            <span>VITEA KOMBUCHA</span>
+            <span>BEERMUT</span>
+            <span>MIXOLOGY</span>
+          </div>
+
+          {/* Transport & Signatures */}
+          <div className="border">
+            <div className="bg-gray-50 p-2 border-b">
+              <p className="font-bold text-xs text-black">Datos del transportista:</p>
+            </div>
+            <div className="grid grid-cols-3 divide-x min-h-[60px]">
+              <div className="p-2">
+                <p className="font-bold text-xs text-black">Preparó:</p>
+              </div>
+              <div className="p-2">
+                <p className="font-bold text-xs text-black">Entregó:</p>
+              </div>
+              <div className="p-2">
+                <p className="font-bold text-xs text-black">Recibí conforme:</p>
+                <p className="text-center text-xs text-black mt-6">Firma y sello</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Observations */}
+          <div className="border p-2 min-h-[40px]">
+            <p className="font-bold text-xs text-black">Observaciones:</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -429,62 +481,118 @@ async function downloadDoc(doc: DocDetail) {
   const data = doc.data;
   if (!data) return;
 
+  // Use specific PDF generator for remitos
+  if (doc.type === "remito") {
+    const { generateRemitoPDF } = await import("@/components/documentos/remito-pdf");
+    generateRemitoPDF({
+      number: doc.number,
+      date: data.date,
+      customer: data.customer,
+      items: data.items,
+      subtotal: data.subtotal,
+      discount: data.discount,
+      total: data.total,
+      order_number: data.order_number,
+      payment_condition: data.payment_condition,
+    });
+    return;
+  }
+
+  // Generic PDF for other document types (presupuesto, orden_venta, factura)
   const { jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
+  const { COMPANY } = await import("@/lib/constants/company");
 
   const pdf = new jsPDF();
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 12;
+  const rightCol = pageWidth - margin;
 
-  // Header - Brand
-  pdf.setFontSize(20);
-  pdf.setTextColor(180, 100, 0);
-  pdf.text("Buenas Maltas", 14, 22);
-  pdf.setFontSize(10);
-  pdf.setTextColor(100);
-  pdf.text("Cervecería Artesanal", 14, 28);
+  // Header border
+  pdf.setDrawColor(0);
+  pdf.setLineWidth(0.5);
+  pdf.rect(margin, 10, pageWidth - margin * 2, 35);
 
-  // Header - Document type
-  pdf.setFontSize(16);
-  pdf.setTextColor(40);
-  pdf.text(TYPE_LABELS[doc.type], 196, 18, { align: "right" });
-  pdf.setFontSize(10);
-  pdf.setTextColor(80);
-  pdf.text(`N° ${doc.number}`, 196, 24, { align: "right" });
-  pdf.text(new Date(data.date).toLocaleDateString("es-AR"), 196, 30, {
-    align: "right",
-  });
-  pdf.text(`Pedido: ${data.order_number}`, 196, 36, { align: "right" });
+  // Company logo text
+  pdf.rect(margin, 10, 45, 35, "S");
+  pdf.setFontSize(14);
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(0);
+  pdf.text("BUENAS", margin + 5, 22);
+  pdf.text("MALTAS", margin + 5, 29);
 
-  // Separator
-  pdf.setDrawColor(200);
-  pdf.line(14, 42, 196, 42);
-
-  // Customer
-  let y = 50;
-  pdf.setFontSize(8);
-  pdf.setTextColor(140);
-  pdf.text("CLIENTE", 14, y);
-  y += 6;
-  pdf.setFontSize(11);
-  pdf.setTextColor(40);
-  pdf.text(data.customer.name, 14, y);
-  y += 5;
+  // Company details
+  const companyX = margin + 48;
   pdf.setFontSize(9);
-  pdf.setTextColor(80);
-  if (data.customer.cuit) {
-    pdf.text(`CUIT: ${data.customer.cuit}`, 14, y);
-    y += 5;
-  }
-  pdf.text(data.customer.address, 14, y);
-  y += 5;
-  if (data.customer.iva_condition) {
-    pdf.text(`IVA: ${data.customer.iva_condition}`, 14, y);
-    y += 5;
-  }
+  pdf.text(COMPANY.name, companyX, 16);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdf.text(`Cuit: ${COMPANY.cuit}`, companyX, 20);
+  pdf.text(COMPANY.address, companyX, 24);
+  pdf.text(`${COMPANY.locality} - ${COMPANY.postalCode}`, companyX, 28);
+  pdf.text(COMPANY.email, companyX, 32);
+  pdf.setFontSize(6.5);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(COMPANY.ivaCondition, companyX, 38);
+
+  // Document type (right)
+  const typeBoxX = pageWidth - margin - 50;
+  pdf.rect(typeBoxX, 10, 50, 35);
+
+  const typeCode: Record<string, string> = {
+    presupuesto: "X", orden_venta: "X", factura: "A",
+  };
+  pdf.setFontSize(22);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(typeCode[doc.type] || "X", typeBoxX - 10, 20);
+
+  pdf.setFontSize(14);
+  pdf.text(TYPE_LABELS[doc.type], typeBoxX + 10, 18);
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`N° ${COMPANY.puntoVenta} - ${(doc.number || "").replace(/[A-Z]+-/, "").padStart(8, "0")}`, typeBoxX + 5, 25);
+
+  const dateObj = new Date(data.date);
+  pdf.setFontSize(8);
+  pdf.text(`Fecha: ${dateObj.toLocaleDateString("es-AR")}`, typeBoxX + 5, 32);
+
+  // Client section
+  const clientY = 50;
+  pdf.setDrawColor(0);
+  pdf.setLineWidth(0.3);
+  pdf.rect(margin, clientY, pageWidth - margin * 2, 27);
+
+  pdf.setFontSize(8);
+  let cy = clientY + 5;
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Señor/es:", margin + 3, cy);
+  cy += 5;
+  pdf.text("RAZON SOCIAL", margin + 3, cy);
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`: ${data.customer.name}`, margin + 35, cy);
+  cy += 5;
+  pdf.setFont("helvetica", "bold");
+  pdf.text("DOMICILIO", margin + 3, cy);
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`: ${data.customer.address}`, margin + 35, cy);
+  pdf.text(data.customer.province || "Córdoba", rightCol - 30, cy);
+  cy += 5;
+  pdf.setFont("helvetica", "bold");
+  pdf.text("CUIT", margin + 3, cy);
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`: ${data.customer.cuit || "-"}`, margin + 35, cy);
+  cy += 5;
+  pdf.setFont("helvetica", "bold");
+  pdf.text("COND. IVA", margin + 3, cy);
+  pdf.setFont("helvetica", "normal");
+  pdf.text(`: ${data.customer.iva_condition || "-"}`, margin + 35, cy);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(data.payment_condition || "CONTADO", rightCol - 30, cy);
 
   // Items table
-  y += 5;
+  const tableStartY = clientY + 32;
   autoTable(pdf, {
-    startY: y,
+    startY: tableStartY,
     head: [["Código", "Producto", "Cant.", "P. Unit.", "Subtotal"]],
     body: data.items.map((item) => [
       item.code,
@@ -494,60 +602,55 @@ async function downloadDoc(doc: DocDetail) {
       `$${item.subtotal.toLocaleString("es-AR")}`,
     ]),
     headStyles: {
-      fillColor: [180, 100, 0],
-      textColor: 255,
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
       fontSize: 9,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.3,
     },
-    bodyStyles: { fontSize: 9, textColor: [40, 40, 40] },
+    bodyStyles: { fontSize: 8, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.2 },
     columnStyles: {
       2: { halign: "right" },
       3: { halign: "right" },
       4: { halign: "right" },
     },
-    margin: { left: 14, right: 14 },
+    margin: { left: margin, right: margin },
+    theme: "grid",
   });
 
-  // Totals
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const finalY = (pdf as any).lastAutoTable?.finalY ?? y + 40;
+  const finalY = (pdf as any).lastAutoTable?.finalY ?? tableStartY + 40;
   let totY = finalY + 10;
 
   pdf.setFontSize(10);
-  pdf.setTextColor(80);
+  pdf.setTextColor(0);
+  pdf.setFont("helvetica", "normal");
   pdf.text("Subtotal:", 150, totY);
-  pdf.text(`$${data.subtotal.toLocaleString("es-AR")}`, 196, totY, {
-    align: "right",
-  });
+  pdf.text(`$${data.subtotal.toLocaleString("es-AR")}`, rightCol, totY, { align: "right" });
   totY += 6;
 
   if (data.discount > 0) {
     pdf.setTextColor(200, 50, 50);
     pdf.text("Descuento:", 150, totY);
-    pdf.text(`-${data.discount}%`, 196, totY, { align: "right" });
+    pdf.text(`-${data.discount}%`, rightCol, totY, { align: "right" });
     totY += 6;
   }
 
-  pdf.setDrawColor(200);
-  pdf.line(150, totY, 196, totY);
+  pdf.setDrawColor(0);
+  pdf.line(150, totY, rightCol, totY);
   totY += 6;
   pdf.setFontSize(12);
-  pdf.setTextColor(40);
+  pdf.setTextColor(0);
   pdf.setFont("helvetica", "bold");
   pdf.text("TOTAL:", 150, totY);
-  pdf.text(`$${data.total.toLocaleString("es-AR")}`, 196, totY, {
-    align: "right",
-  });
+  pdf.text(`$${data.total.toLocaleString("es-AR")}`, rightCol, totY, { align: "right" });
 
   // Footer
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8);
-  pdf.setTextColor(160);
-  pdf.text(
-    "Documento generado por Buenas Maltas - Sistema de Gestión",
-    105,
-    285,
-    { align: "center" }
-  );
+  pdf.setFontSize(7);
+  pdf.setTextColor(150);
+  pdf.text("Documento generado por Buenas Maltas - Sistema de Gestión", pageWidth / 2, 285, { align: "center" });
 
   pdf.save(`${TYPE_LABELS[doc.type]}_${doc.number ?? doc.id}.pdf`);
 }

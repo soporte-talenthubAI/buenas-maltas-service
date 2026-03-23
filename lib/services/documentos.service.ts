@@ -28,14 +28,31 @@ export const documentosService = {
 
     if (!order) throw new Error("Pedido no encontrado");
 
+    // Check if all 4 document types already exist with status "emitido"
+    const existingEmitidos = await prisma.document.findMany({
+      where: { order_id: orderId, status: "emitido" },
+      select: { type: true },
+    });
+    const emitidoTypes = existingEmitidos.map((d) => d.type);
+    const allFourExist = DOC_SEQUENCE.every((t) => emitidoTypes.includes(t));
+    if (allFourExist) {
+      throw new Error(
+        "Este pedido ya tiene todos los documentos generados. Edite el pedido para regenerar."
+      );
+    }
+
     const documents = [];
+    const skipped: DocumentType[] = [];
 
     for (const type of types) {
       const existing = await prisma.document.findFirst({
         where: { order_id: orderId, type, status: { not: "anulado" } },
       });
 
-      if (existing) continue;
+      if (existing) {
+        skipped.push(type);
+        continue;
+      }
 
       const doc = await prisma.document.create({
         data: {
@@ -47,8 +64,11 @@ export const documentosService = {
             order_number: order.order_number,
             customer: {
               name: order.customer.commercial_name,
+              contact_name: order.customer.contact_name,
               cuit: order.customer.cuit,
               address: `${order.customer.street} ${order.customer.street_number}, ${order.customer.locality}`,
+              locality: order.customer.locality,
+              province: order.customer.province,
               iva_condition: order.customer.iva_condition,
             },
             items: order.items.map((item) => ({
@@ -61,6 +81,7 @@ export const documentosService = {
             subtotal: Number(order.subtotal),
             discount: Number(order.discount),
             total: Number(order.total),
+            payment_condition: "CONTADO",
             date: new Date().toISOString(),
           },
         },
@@ -81,15 +102,15 @@ export const documentosService = {
       });
     }
 
-    return documents;
+    return { documents, skipped };
   },
 
   async generateBatch(orderIds: string[], types: DocumentType[]) {
     const results = [];
     for (const orderId of orderIds) {
       try {
-        const docs = await this.generateForOrder(orderId, types);
-        results.push({ orderId, success: true, documents: docs });
+        const result = await this.generateForOrder(orderId, types);
+        results.push({ orderId, success: true, documents: result.documents, skipped: result.skipped });
       } catch (error) {
         results.push({
           orderId,

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { FileText, Loader2, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
 const DOC_TYPES = [
   { value: "presupuesto", label: "Presupuesto" },
@@ -26,7 +26,7 @@ export function DocumentoGenerator({
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<
-    { orderId: string; success: boolean; error?: string }[] | null
+    { orderId: string; success: boolean; error?: string; skipped?: string[] }[] | null
   >(null);
 
   const toggleType = (type: string) => {
@@ -53,7 +53,7 @@ export function DocumentoGenerator({
         const data = await res.json();
         if (res.ok) {
           setResults([
-            { orderId: orderIds[0], success: true },
+            { orderId: orderIds[0], success: true, skipped: data.skipped },
           ]);
         } else {
           setResults([
@@ -137,18 +137,28 @@ export function DocumentoGenerator({
                 {results.map((r, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-gray-50"
+                    className="space-y-1"
                   >
-                    {r.success ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-600" />
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                      {r.success ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-600" />
+                      )}
+                      <span className="text-sm">
+                        {r.success
+                          ? "Documentos generados correctamente"
+                          : r.error}
+                      </span>
+                    </div>
+                    {r.success && r.skipped && r.skipped.length > 0 && (
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 text-amber-800">
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        <span className="text-sm">
+                          Omitidos (ya existentes): {r.skipped.join(", ")}
+                        </span>
+                      </div>
                     )}
-                    <span className="text-sm">
-                      {r.success
-                        ? "Documentos generados correctamente"
-                        : r.error}
-                    </span>
                   </div>
                 ))}
               </div>

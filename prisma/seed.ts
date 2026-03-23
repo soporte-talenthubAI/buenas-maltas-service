@@ -17,6 +17,7 @@ async function main() {
   // ─── USERS ──────────────────────────────────────────────────
   const adminPassword = await bcrypt.hash("admin123", 10);
   const driverPassword = await bcrypt.hash("driver123", 10);
+  const vendedorPassword = await bcrypt.hash("vendedor123", 10);
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@buenasmaltas.com" },
@@ -40,7 +41,18 @@ async function main() {
     },
   });
 
-  console.log("Users created:", { admin: admin.email, driver: driver.email });
+  const vendedor = await prisma.user.upsert({
+    where: { email: "vendedor@buenasmaltas.com" },
+    update: {},
+    create: {
+      email: "vendedor@buenasmaltas.com",
+      name: "Diego Vendedor",
+      password: vendedorPassword,
+      role: "vendedor",
+    },
+  });
+
+  console.log("Users created:", { admin: admin.email, driver: driver.email, vendedor: vendedor.email });
 
   // ─── CUSTOMERS ──────────────────────────────────────────────
   const customers = await Promise.all([
@@ -64,6 +76,7 @@ async function main() {
         has_time_restriction: true,
         delivery_window_start: "10:00",
         delivery_window_end: "14:00",
+        sales_channel: "Bar / Restaurante",
       },
     }),
     prisma.customer.upsert({
@@ -83,6 +96,7 @@ async function main() {
         province: "Córdoba",
         latitude: -31.4166083,
         longitude: -64.2019115,
+        sales_channel: "Bar / Restaurante",
       },
     }),
     prisma.customer.upsert({
@@ -90,7 +104,7 @@ async function main() {
       update: {},
       create: {
         code: "CLI-003",
-        commercial_name: "Almacén Don Roberto",
+        commercial_name: "Almacen Don Roberto",
         contact_name: "Roberto Sánchez",
         phone: "351-678-9012",
         email: "donroberto@gmail.com",
@@ -102,6 +116,7 @@ async function main() {
         province: "Córdoba",
         latitude: -31.4105023,
         longitude: -64.1940803,
+        sales_channel: "Drugstore / Autoservicios / Despensas",
       },
     }),
     prisma.customer.upsert({
@@ -124,6 +139,7 @@ async function main() {
         has_time_restriction: true,
         delivery_window_start: "08:00",
         delivery_window_end: "12:00",
+        sales_channel: "Bar / Restaurante",
       },
     }),
     prisma.customer.upsert({
@@ -143,6 +159,7 @@ async function main() {
         province: "Córdoba",
         latitude: -31.4191899,
         longitude: -64.1778170,
+        sales_channel: "Bar / Restaurante",
       },
     }),
     prisma.customer.upsert({
@@ -162,6 +179,7 @@ async function main() {
         province: "Córdoba",
         latitude: -31.3699753,
         longitude: -64.2316219,
+        sales_channel: "Bar / Restaurante",
       },
     }),
     prisma.customer.upsert({
@@ -184,6 +202,7 @@ async function main() {
         has_time_restriction: true,
         delivery_window_start: "07:00",
         delivery_window_end: "11:00",
+        sales_channel: "Supermercado",
       },
     }),
     prisma.customer.upsert({
@@ -203,6 +222,7 @@ async function main() {
         province: "Córdoba",
         latitude: -31.4174736,
         longitude: -64.1863140,
+        sales_channel: "Bar / Restaurante",
       },
     }),
     prisma.customer.upsert({
@@ -222,6 +242,7 @@ async function main() {
         province: "Córdoba",
         latitude: -31.4156421,
         longitude: -64.1930607,
+        sales_channel: "Tienda de bebidas A",
       },
     }),
     prisma.customer.upsert({
@@ -241,26 +262,64 @@ async function main() {
         province: "Córdoba",
         latitude: -31.4310854,
         longitude: -64.2259218,
+        sales_channel: "Distribuidor",
       },
     }),
   ]);
 
   console.log(`Customers created: ${customers.length}`);
 
-  // ─── PRODUCTS (as order items in orders below) ──────────────
-  const products = [
-    { code: "IPA-500", name: "IPA Buenas Maltas 500ml", price: 2500 },
-    { code: "IPA-1L", name: "IPA Buenas Maltas 1L", price: 4200 },
-    { code: "STOUT-500", name: "Stout Buenas Maltas 500ml", price: 2700 },
-    { code: "STOUT-1L", name: "Stout Buenas Maltas 1L", price: 4500 },
-    { code: "BLONDE-500", name: "Blonde Ale 500ml", price: 2300 },
-    { code: "BLONDE-1L", name: "Blonde Ale 1L", price: 3900 },
-    { code: "RED-500", name: "Red Ale 500ml", price: 2600 },
-    { code: "RED-1L", name: "Red Ale 1L", price: 4300 },
-    { code: "WHEAT-500", name: "Wheat Beer 500ml", price: 2400 },
-    { code: "BARREL-20L", name: "Barril Chopp 20L", price: 28000 },
-    { code: "BARREL-50L", name: "Barril Chopp 50L", price: 62000 },
+  // ─── PRODUCTS ──────────────────────────────────────────────
+  // Products matching Excel structure (Tango article codes)
+  const productData = [
+    // Träumer Bier - Latas 473ml (LAT)
+    { code: "0062", name: "WHEAT Lata 473 cm3", price: 3571, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "0061", name: "GOLDEN Lata 473 cm3", price: 3571, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "0063", name: "AMBER Lata 473 cm3", price: 3571, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "0064", name: "PORTER Lata 473 cm3", price: 3571, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "0065", name: "IPA Lata 473 cm3", price: 3929, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "0086", name: "APA Lata 473 cm3", price: 3929, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "0087", name: "LAB Lata 473 cm3", price: 3929, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "0088", name: "Tripel Autoctona Lata 473 cm3", price: 3929, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "181", name: "Session BLONDE Lata 473", price: 3214, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "182", name: "Session HOPPY Lata 473", price: 3214, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    { code: "183", name: "Session RED Lata 473", price: 3214, cost: 2236, brand: "Träumer", category: "cerveza", unit: "lata" },
+    // Träumer Bier - Barriles (BAR)
+    { code: "BAR-20L", name: "Barril Chopp 20L", price: 28000, cost: 18000, brand: "Träumer", category: "chopp", unit: "barril" },
+    { code: "BAR-50L", name: "Barril Chopp 50L", price: 62000, cost: 40000, brand: "Träumer", category: "chopp", unit: "barril" },
+    // Beermut (GOL)
+    { code: "253", name: "Beermut 473cm3", price: 4286, cost: 1968, brand: "Beermut", category: "beermut", unit: "lata" },
+    { code: "254", name: "Beermut con Tonica 473cm3", price: 4286, cost: 1968, brand: "Beermut", category: "beermut", unit: "lata" },
+    // Vitea Kombucha (BA)
+    { code: "258", name: "Vitea Komb Hibisco lata 473cm3", price: 2714, cost: 1450, brand: "Vitea", category: "kombucha", unit: "lata" },
+    { code: "259", name: "Vitea Komb Te Verde lata 473cm", price: 2714, cost: 1450, brand: "Vitea", category: "kombucha", unit: "lata" },
+    { code: "260", name: "Vitea Lemon Grass lata 473cm3", price: 2714, cost: 1450, brand: "Vitea", category: "kombucha", unit: "lata" },
+    // Mixology (PAR)
+    { code: "270", name: "Mixology Listo Apa+gin", price: 3500, cost: 1800, brand: "Mixology", category: "mixology", unit: "lata" },
+    { code: "271", name: "Mixology Negroni", price: 3500, cost: 1800, brand: "Mixology", category: "mixology", unit: "lata" },
+    // Servicio a terceros
+    { code: "00201", name: "Logistica - Venta", price: 23967, cost: 15000, brand: "Servicio", category: "servicio", unit: "unidad" },
   ];
+
+  for (const p of productData) {
+    await prisma.product.upsert({
+      where: { code: p.code },
+      update: { unit_price: p.price, cost_price: p.cost },
+      create: {
+        code: p.code,
+        name: p.name,
+        brand: p.brand,
+        category: p.category,
+        unit_price: p.price,
+        cost_price: p.cost,
+        unit: p.unit,
+      },
+    });
+  }
+  console.log(`Products created: ${productData.length}`);
+
+  // Products reference for order items
+  const products = productData.map((p) => ({ code: p.code, name: p.name, price: p.price }));
 
   // ─── ORDERS ─────────────────────────────────────────────────
   const statuses = [
@@ -328,6 +387,25 @@ async function main() {
   }
 
   console.log("Orders created: 25");
+
+  // ─── KPI TARGETS ──────────────────────────────────────────────
+  const kpiTargets = [
+    { key: "latas_traumer", label: "Latas Träumer / mes", target_value: 2000, unit: "latas", year: 2026 },
+    { key: "latas_vitea", label: "Latas Vitea / mes", target_value: 2000, unit: "latas", year: 2026 },
+    { key: "latas_mixology", label: "Latas Mixology / mes", target_value: 500, unit: "latas", year: 2026 },
+    { key: "latas_beermut", label: "Latas Beermut / mes", target_value: 500, unit: "latas", year: 2026 },
+    { key: "litros_barriles", label: "Litros Barriles / mes", target_value: 2400, unit: "litros", year: 2026 },
+    { key: "servicio_terceros", label: "Servicio a Terceros / año", target_value: 30000000, unit: "$", year: 2026 },
+  ];
+
+  for (const kpi of kpiTargets) {
+    await prisma.kpiTarget.upsert({
+      where: { key: kpi.key },
+      update: { target_value: kpi.target_value, label: kpi.label, unit: kpi.unit, year: kpi.year },
+      create: kpi,
+    });
+  }
+  console.log(`KPI Targets created: ${kpiTargets.length}`);
 
   console.log("Seed completed successfully!");
 }

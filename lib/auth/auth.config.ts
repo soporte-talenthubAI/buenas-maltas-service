@@ -64,8 +64,9 @@ export const authConfig: NextAuthConfig = {
       if (isOnLogin) {
         if (isLoggedIn) {
           const role = (auth?.user as { role?: string })?.role;
-          const redirectTo =
-            role === "repartidor" ? "/mis-rutas" : "/dashboard";
+          let redirectTo = "/dashboard";
+          if (role === "repartidor") redirectTo = "/mis-rutas";
+          else if (role === "vendedor") redirectTo = "/ventas";
           return Response.redirect(new URL(redirectTo, nextUrl));
         }
         return true;
