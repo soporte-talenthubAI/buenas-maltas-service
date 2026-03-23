@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,15 @@ interface OrderItem {
   subtotal: number;
 }
 
-export default function NuevoPedidoPage() {
+export default function NuevoPedidoPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-amber-600" /></div>}>
+      <NuevoPedidoPage />
+    </Suspense>
+  );
+}
+
+function NuevoPedidoPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get("clienteId");
