@@ -48,7 +48,7 @@ const CHANNEL_COLORS = [
 const formatCurrency = (v: number) =>
   "$ " + v.toLocaleString("es-AR", { maximumFractionDigits: 0 });
 
-export function CanalesTab() {
+export function CanalesTab({ origin = "all" }: { origin?: string }) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [data, setData] = useState<CanalesData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,14 +56,16 @@ export function CanalesTab() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/analytics/canales?year=${year}`)
+    const params = new URLSearchParams({ year: String(year) });
+    if (origin !== "all") params.set("origin", origin);
+    fetch(`/api/analytics/canales?${params}`)
       .then((r) => r.json())
       .then((d) => {
         setData(d);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [year]);
+  }, [year, origin]);
 
   const grouped = useMemo(() => {
     if (!data) return [];

@@ -70,7 +70,7 @@ function ReportTable({ title, onExport, columns, rows, footer }: {
   );
 }
 
-export function ReportesTab() {
+export function ReportesTab({ origin = "all" }: { origin?: string }) {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportTab, setReportTab] = useState<ReportTab>("clientes");
@@ -84,6 +84,7 @@ export function ReportesTab() {
     const params = new URLSearchParams();
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
+    if (origin !== "all") params.set("origin", origin);
     fetch(`/api/analytics/reports?${params}`)
       .then((r) => r.json())
       .then((d) => { setReportData(d); setReportLoading(false); })
@@ -93,7 +94,7 @@ export function ReportesTab() {
   useEffect(() => {
     fetchReports();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [origin]);
 
   const filteredCustomers = useMemo(() => {
     if (!reportData) return [];

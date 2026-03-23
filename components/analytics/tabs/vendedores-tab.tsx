@@ -44,19 +44,20 @@ const BRAND_KEYS: { key: keyof VendedorYearData; label: string }[] = [
   { key: "mixology", label: "Mixology" },
 ];
 
-export function VendedoresTab() {
+export function VendedoresTab({ origin = "all" }: { origin?: string }) {
   const [data, setData] = useState<VendedoresData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics/vendedores-analytics")
+    const params = origin !== "all" ? `?origin=${origin}` : "";
+    fetch(`/api/analytics/vendedores-analytics${params}`)
       .then((r) => r.json())
       .then((d) => {
         setData(d);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [origin]);
 
   const latestYear = useMemo(
     () => (data ? Math.max(...data.years) : new Date().getFullYear()),

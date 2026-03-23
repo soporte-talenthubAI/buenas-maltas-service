@@ -5,8 +5,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const year = parseInt(searchParams.get("year") || String(new Date().getFullYear()), 10);
+    const origin = searchParams.get("origin") ?? undefined;
 
-    const data = await analyticsService.getKpiIndicators(year);
+    const data = await analyticsService.getKpiIndicators(year, origin);
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });

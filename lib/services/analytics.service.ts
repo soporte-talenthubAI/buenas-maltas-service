@@ -9,8 +9,14 @@ import {
   BRANDS,
 } from "@/lib/utils/product-brand-resolver";
 
+// Helper: build origin filter for Prisma where clause
+function originWhere(origin?: string) {
+  if (!origin || origin === "all") return {};
+  return { origin };
+}
+
 export const analyticsService = {
-  async getSalesOverview(period: "week" | "month" | "year" = "month") {
+  async getSalesOverview(period: "week" | "month" | "year" = "month", origin?: string) {
     const now = new Date();
     const startDate = new Date();
 
@@ -22,6 +28,7 @@ export const analyticsService = {
       where: {
         order_date: { gte: startDate },
         status: { not: "cancelado" },
+        ...originWhere(origin),
       },
       include: {
         customer: { select: { commercial_name: true, locality: true } },
@@ -37,7 +44,7 @@ export const analyticsService = {
     return { totalSales, totalOrders, avgOrderValue, period };
   },
 
-  async getSalesByDay(days = 30) {
+  async getSalesByDay(days = 30, origin?: string) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -45,6 +52,7 @@ export const analyticsService = {
       where: {
         order_date: { gte: startDate },
         status: { not: "cancelado" },
+        ...originWhere(origin),
       },
       select: { order_date: true, total: true },
       orderBy: { order_date: "asc" },
@@ -61,9 +69,10 @@ export const analyticsService = {
     return Object.values(byDay);
   },
 
-  async getOrdersByStatus() {
+  async getOrdersByStatus(origin?: string) {
     const orders = await prisma.order.groupBy({
       by: ["status"],
+      where: originWhere(origin),
       _count: true,
     });
 
@@ -73,9 +82,9 @@ export const analyticsService = {
     }));
   },
 
-  async getTopCustomers(limit = 10) {
+  async getTopCustomers(limit = 10, origin?: string) {
     const orders = await prisma.order.findMany({
-      where: { status: { not: "cancelado" } },
+      where: { status: { not: "cancelado" }, ...originWhere(origin) },
       include: { customer: { select: { commercial_name: true } } },
     });
 
@@ -92,8 +101,9 @@ export const analyticsService = {
       .slice(0, limit);
   },
 
-  async getTopProducts(limit = 10) {
+  async getTopProducts(limit = 10, origin?: string) {
     const items = await prisma.orderItem.findMany({
+      where: origin && origin !== "all" ? { order: { origin } } : undefined,
       select: {
         product_name: true,
         quantity: true,
@@ -256,7 +266,7 @@ export const analyticsService = {
   },
 
   // ─── SALES / VENDEDOR ANALYTICS ──────────────────────────────────
-  async getSalesAnalytics(dateFrom?: string, dateTo?: string) {
+  async getSalesAnalytics(dateFrom?: string, dateTo?: string, origin?: string) {
     const dateFilter: Record<string, unknown> = {};
     if (dateFrom || dateTo) {
       dateFilter.order_date = {
@@ -275,7 +285,7 @@ export const analyticsService = {
 
     const [orders, allCustomers, visitRoutes, visitStops, vendedores] = await Promise.all([
       prisma.order.findMany({
-        where: { status: { not: "cancelado" }, ...dateFilter },
+        where: { status: { not: "cancelado" }, ...dateFilter, ...originWhere(origin) },
         include: {
           customer: { select: { id: true, commercial_name: true, locality: true } },
           items: { select: { product_name: true, quantity: true, subtotal: true } },
@@ -754,7 +764,7 @@ export const analyticsService = {
   },
 
   // ─── DATOS PARA REPORTES CON FILTROS ───────────────────────────
-  async getReportData(dateFrom?: string, dateTo?: string) {
+  async getReportData(dateFrom?: string, dateTo?: string, origin?: string) {
     const dateFilter: Record<string, unknown> = {};
     if (dateFrom || dateTo) {
       dateFilter.order_date = {
@@ -770,9 +780,11 @@ export const analyticsService = {
       },
     } : undefined;
 
+    const ow = originWhere(origin);
+
     const [orders, items, documents, routes, routeOrders, customers] = await Promise.all([
       prisma.order.findMany({
-        where: { status: { not: "cancelado" }, ...dateFilter },
+        where: { status: { not: "cancelado" }, ...dateFilter, ...ow },
         include: {
           customer: { select: { commercial_name: true, locality: true } },
           items: { select: { product_name: true, product_code: true, quantity: true, unit_price: true, subtotal: true } },
@@ -780,7 +792,7 @@ export const analyticsService = {
         orderBy: { order_date: "desc" },
       }),
       prisma.orderItem.findMany({
-        where: { order: { status: { not: "cancelado" }, ...dateFilter } },
+        where: { order: { status: { not: "cancelado" }, ...dateFilter, ...ow } },
         select: { product_name: true, product_code: true, quantity: true, unit_price: true, subtotal: true },
       }),
       prisma.document.findMany({
@@ -885,7 +897,7 @@ export const analyticsService = {
   },
 
   // ─── PRODUCTOS ANALYTICS (cantidades + facturación por producto/mes) ────
-  async getProductosAnalytics(year: number) {
+  async getProductosAnalytics(year: number, origin?: string) {
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31, 23, 59, 59);
     const monthKeys = generateMonthKeys(year);
@@ -894,6 +906,7 @@ export const analyticsService = {
       where: {
         order_date: { gte: startDate, lte: endDate },
         status: { not: "cancelado" },
+        ...originWhere(origin),
       },
       include: { items: true },
     });
@@ -975,7 +988,7 @@ export const analyticsService = {
   },
 
   // ─── CLIENTES ANALYTICS (facturación por cliente, por marca, Pareto) ────
-  async getClientesAnalytics(year: number) {
+  async getClientesAnalytics(year: number, origin?: string) {
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31, 23, 59, 59);
     const monthKeys = generateMonthKeys(year);
@@ -984,6 +997,7 @@ export const analyticsService = {
       where: {
         order_date: { gte: startDate, lte: endDate },
         status: { not: "cancelado" },
+        ...originWhere(origin),
       },
       include: {
         customer: { select: { commercial_name: true, sales_channel: true } },
@@ -1075,7 +1089,7 @@ export const analyticsService = {
   },
 
   // ─── CANALES ANALYTICS (ventas por canal con márgenes) ─────────────
-  async getCanalesAnalytics(year: number) {
+  async getCanalesAnalytics(year: number, origin?: string) {
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31, 23, 59, 59);
     const monthKeys = generateMonthKeys(year);
@@ -1084,6 +1098,7 @@ export const analyticsService = {
       where: {
         order_date: { gte: startDate, lte: endDate },
         status: { not: "cancelado" },
+        ...originWhere(origin),
       },
       include: {
         customer: { select: { sales_channel: true } },
@@ -1137,9 +1152,9 @@ export const analyticsService = {
   },
 
   // ─── VENDEDORES ANALYTICS (histórico por vendedor) ─────────────────
-  async getVendedoresAnalytics() {
+  async getVendedoresAnalytics(origin?: string) {
     const orders = await prisma.order.findMany({
-      where: { status: { not: "cancelado" } },
+      where: { status: { not: "cancelado" }, ...originWhere(origin) },
       include: {
         created_by: { select: { name: true } },
         items: true,
@@ -1192,7 +1207,7 @@ export const analyticsService = {
   },
 
   // ─── DESCUENTOS ANALYTICS ─────────────────────────────────────────
-  async getDescuentosAnalytics(year: number) {
+  async getDescuentosAnalytics(year: number, origin?: string) {
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31, 23, 59, 59);
     const monthKeys = generateMonthKeys(year);
@@ -1201,6 +1216,7 @@ export const analyticsService = {
       where: {
         order_date: { gte: startDate, lte: endDate },
         status: { not: "cancelado" },
+        ...originWhere(origin),
       },
       include: { customer: { select: { commercial_name: true } } },
     });
@@ -1251,7 +1267,7 @@ export const analyticsService = {
   },
 
   // ─── KPI INDICATORS (objetivos vs actual) ─────────────────────────
-  async getKpiIndicators(year: number) {
+  async getKpiIndicators(year: number, origin?: string) {
     const targets = await prisma.kpiTarget.findMany({ where: { year } });
 
     const now = new Date();
@@ -1263,6 +1279,7 @@ export const analyticsService = {
       where: {
         order_date: { gte: startOfMonth, lte: endOfMonth },
         status: { not: "cancelado" },
+        ...originWhere(origin),
       },
       include: { items: true },
     });
@@ -1298,6 +1315,7 @@ export const analyticsService = {
         where: {
           order_date: { gte: new Date(year, 0, 1), lte: endOfMonth },
           status: { not: "cancelado" },
+          ...originWhere(origin),
         },
         include: { items: true },
       });

@@ -54,7 +54,7 @@ const fmtCurrency = (v: number) =>
 
 const fmtQty = (v: number) => v.toLocaleString("es-AR");
 
-export function ProductosTab() {
+export function ProductosTab({ origin = "all" }: { origin?: string }) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [data, setData] = useState<ProductosData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +63,9 @@ export function ProductosTab() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/analytics/productos?year=${year}`);
+      const params = new URLSearchParams({ year: String(year) });
+      if (origin !== "all") params.set("origin", origin);
+      const res = await fetch(`/api/analytics/productos?${params}`);
       const json = await res.json();
       setData(json);
     } catch (err) {
@@ -71,7 +73,7 @@ export function ProductosTab() {
     } finally {
       setLoading(false);
     }
-  }, [year]);
+  }, [year, origin]);
 
   useEffect(() => {
     fetchData();

@@ -41,21 +41,23 @@ interface DescuentosData {
 const formatCurrency = (v: number) =>
   "$ " + v.toLocaleString("es-AR", { maximumFractionDigits: 0 });
 
-export function DescuentosTab() {
+export function DescuentosTab({ origin = "all" }: { origin?: string }) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [data, setData] = useState<DescuentosData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/analytics/descuentos?year=${year}`)
+    const params = new URLSearchParams({ year: String(year) });
+    if (origin !== "all") params.set("origin", origin);
+    fetch(`/api/analytics/descuentos?${params}`)
       .then((r) => r.json())
       .then((d) => {
         setData(d);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [year]);
+  }, [year, origin]);
 
   const filteredClients = useMemo(() => {
     if (!data) return [];

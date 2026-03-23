@@ -276,6 +276,7 @@ async function processImport(buffer: Buffer, userId: string): Promise<ImportResu
                 payment_method: firstItem.condicionVta || null,
                 order_type: "tango_import",
                 observations: `Importado desde Excel - Vendedor: ${firstItem.vendedor}`,
+                origin: "excel_import",
                 tango_id: nroComprobante,
                 created_by_id: userId,
               },

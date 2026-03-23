@@ -58,18 +58,20 @@ function KPICard({ icon: Icon, color, value, label }: { icon: typeof DollarSign;
   );
 }
 
-export function DashboardTab() {
+export function DashboardTab({ origin = "all" }: { origin?: string }) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"week" | "month" | "year">("month");
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/analytics?period=${period}`)
+    const params = new URLSearchParams({ period });
+    if (origin !== "all") params.set("origin", origin);
+    fetch(`/api/analytics?${params}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [period]);
+  }, [period, origin]);
 
   if (loading || !data) return <Loading />;
 
