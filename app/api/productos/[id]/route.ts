@@ -45,14 +45,9 @@ export async function PUT(
 
     // Sync to Tango
     if (body.sync_tango) {
-      await tangoService.updateProduct(product.code, {
-        code: product.code,
-        name: product.name,
-        brand: product.brand,
-        category: product.category,
-        unit_price: Number(product.unit_price),
-        cost_price: product.cost_price ? Number(product.cost_price) : undefined,
-        unit: product.unit,
+      await tangoService.updateArticulo({
+        COD_STA11: product.code,
+        DESCRIPCIO: product.name,
       });
     }
 
@@ -81,8 +76,8 @@ export async function DELETE(
 
     invalidateCache();
 
-    // Notify Tango
-    await tangoService.deleteProduct(product.code);
+    // Notify Tango (best-effort)
+    tangoService.deleteArticulo(Number(product.code) || 0).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

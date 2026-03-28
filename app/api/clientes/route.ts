@@ -1,14 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const customers = await prisma.customer.findMany({
-      where: { is_active: true },
-      orderBy: { commercial_name: "asc" },
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const includeStats = searchParams.get("includeStats") === "true";
+    const potenciales = searchParams.get("potenciales") === "true";
+
+    const where: Record<string, unknown> = {};
+
+    if (search) {
+      where.OR = [
+        { commercial_name: { contains: search, mode: "insensitive" } },
+        { razon_social: { contains: search, mode: "insensitive" } },
+        { code: { contains: search, mode: "insensitive" } },
+        { cuit: { contains: search, mode: "insensitive" } },
+        { locality: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (potenciales) {
+      where.orders = { none: {} };
+    }
+
+    const [customers, total] = await Promise.all([
+      prisma.customer.findMany({
+        where,
+        include: includeStats
+          ? {
+              _count: { select: { orders: true } },
+              orders: {
+                select: { total: true },
+                take: 1000,
+              },
+            }
+          : undefined,
+        orderBy: { commercial_name: "asc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.customer.count({ where }),
+    ]);
+
+    const result = customers.map((c) => {
+      const orderCount = includeStats ? (c as { _count?: { orders: number } })._count?.orders || 0 : 0;
+      const totalSpent = includeStats
+        ? ((c as { orders?: { total: unknown }[] }).orders || []).reduce(
+            (sum: number, o: { total: unknown }) => sum + (Number(o.total) || 0),
+            0
+          )
+        : 0;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { orders: _orders, _count: _c, ...rest } = c as Record<string, unknown>;
+      return {
+        ...rest,
+        has_orders: orderCount > 0,
+        order_count: orderCount,
+        total_spent: totalSpent,
+      };
     });
 
-    return NextResponse.json(customers);
+    return NextResponse.json({ customers: result, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
@@ -42,15 +98,13 @@ export async function POST(request: NextRequest) {
       delivery_window_end,
     } = body;
 
-    // Validate required fields
-    if (!commercial_name || !street || !street_number || !locality) {
+    if (!commercial_name || !locality) {
       return NextResponse.json(
-        { error: "Campos requeridos: commercial_name, street, street_number, locality" },
+        { error: "Campos requeridos: commercial_name, locality" },
         { status: 400 }
       );
     }
 
-    // Auto-generate code if not provided
     let customerCode = code;
     if (!customerCode) {
       const lastCustomer = await prisma.customer.findFirst({
@@ -67,8 +121,8 @@ export async function POST(request: NextRequest) {
       data: {
         code: customerCode,
         commercial_name,
-        street,
-        street_number,
+        street: street || "",
+        street_number: street_number || "",
         locality,
         contact_name: contact_name ?? undefined,
         phone: phone ?? undefined,

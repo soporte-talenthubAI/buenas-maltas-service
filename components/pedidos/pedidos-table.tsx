@@ -28,6 +28,10 @@ interface Order {
   priority: string;
   subtotal: string;
   total: string;
+  origin: string;
+  vendedor_nombre: string | null;
+  condicion_venta: string | null;
+  remito_nro: string | null;
   customer: {
     id: string;
     commercial_name: string;
@@ -296,12 +300,12 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                     </th>
                     <th className="pb-3 pr-3">Pedido</th>
                     <th className="pb-3 pr-3">Cliente</th>
+                    <th className="pb-3 pr-3">Vendedor</th>
                     <th className="pb-3 pr-3">Fecha</th>
                     <th className="pb-3 pr-3">Estado</th>
-                    <th className="pb-3 pr-3">Prioridad</th>
                     <th className="pb-3 pr-3 text-right">Total</th>
                     <th className="pb-3 pr-3 text-center">Items</th>
-                    <th className="pb-3 pr-3 text-center">Docs</th>
+                    <th className="pb-3 pr-3">Origen</th>
                     <th className="pb-3"></th>
                   </tr>
                 </thead>
@@ -320,16 +324,19 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                           )}
                         </button>
                       </td>
-                      <td className="py-3 pr-3 font-medium">
+                      <td className="py-3 pr-3 font-medium text-black">
                         {order.order_number}
                       </td>
                       <td className="py-3 pr-3">
-                        <div>{order.customer.commercial_name}</div>
-                        <div className="text-xs text-black">
+                        <div className="text-black">{order.customer.commercial_name}</div>
+                        <div className="text-xs text-gray-500">
                           {order.customer.locality}
                         </div>
                       </td>
-                      <td className="py-3 pr-3 text-black">
+                      <td className="py-3 pr-3 text-gray-600 text-xs">
+                        {order.vendedor_nombre || "—"}
+                      </td>
+                      <td className="py-3 pr-3 text-gray-600">
                         {new Date(order.order_date).toLocaleDateString("es-AR")}
                       </td>
                       <td className="py-3 pr-3">
@@ -342,24 +349,21 @@ export function PedidosTable({ onGenerateDocuments }: PedidosTableProps) {
                           {order.status.replace("_", " ")}
                         </span>
                       </td>
-                      <td className="py-3 pr-3">
-                        <span
-                          className={cn(
-                            "text-xs capitalize",
-                            PRIORITY_COLORS[order.priority]
-                          )}
-                        >
-                          {order.priority}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-3 text-right font-medium">
+                      <td className="py-3 pr-3 text-right font-medium text-black">
                         ${Number(order.total).toLocaleString("es-AR")}
                       </td>
-                      <td className="py-3 pr-3 text-center text-black">
+                      <td className="py-3 pr-3 text-center text-gray-600">
                         {order._count.items}
                       </td>
-                      <td className="py-3 pr-3 text-center text-black">
-                        {order._count.documents}
+                      <td className="py-3 pr-3">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-xs font-medium",
+                          order.origin === "tango" ? "bg-indigo-50 text-indigo-700" :
+                          order.origin === "excel_import" ? "bg-emerald-50 text-emerald-700" :
+                          "bg-gray-100 text-gray-600"
+                        )}>
+                          {order.origin === "tango" ? "Tango" : order.origin === "excel_import" ? "Excel" : "Manual"}
+                        </span>
                       </td>
                       <td className="py-3">
                         <Link href={`/dashboard/pedidos/${order.id}`}>

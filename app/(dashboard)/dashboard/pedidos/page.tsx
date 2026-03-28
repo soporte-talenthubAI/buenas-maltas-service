@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PedidosTable } from "@/components/pedidos/pedidos-table";
 import { DocumentoGenerator } from "@/components/pedidos/documento-generator";
@@ -11,22 +11,60 @@ export default function PedidosPage() {
   const [generatorOpen, setGeneratorOpen] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
 
   const handleGenerateDocuments = useCallback((orderIds: string[]) => {
     setSelectedOrderIds(orderIds);
     setGeneratorOpen(true);
   }, []);
 
+  const handleSyncTango = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      // First sync customers so we can link pedidos
+      await fetch("/api/tango/sync-clientes", { method: "POST" });
+      const res = await fetch("/api/tango/sync-pedidos", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setSyncResult(
+          `Sincronizado: ${data.created} creados, ${data.skippedExisting} ya existían, ${data.skippedNoCustomer} sin cliente (de ${data.totalFromTango} pedidos)`
+        );
+        setRefreshKey((k) => k + 1);
+      } else {
+        setSyncResult(`Error: ${data.error}`);
+      }
+    } catch {
+      setSyncResult("Error de conexión con Tango");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-black">Pedidos</h1>
-        <Link href="/dashboard/pedidos/nuevo">
-          <Button className="bg-amber-600 hover:bg-amber-700 text-white">
-            <Plus className="w-4 h-4" /> Nuevo Pedido
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleSyncTango} disabled={syncing}>
+            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Sincronizar Tango
           </Button>
-        </Link>
+          <Link href="/dashboard/pedidos/nuevo">
+            <Button className="bg-amber-600 hover:bg-amber-700 text-white">
+              <Plus className="w-4 h-4" /> Nuevo Pedido
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {syncResult && (
+        <div className={`px-4 py-3 rounded-lg text-sm mb-4 ${syncResult.startsWith("Error") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>
+          {syncResult}
+          <button onClick={() => setSyncResult(null)} className="ml-2 underline">cerrar</button>
+        </div>
+      )}
 
       <PedidosTable
         key={refreshKey}

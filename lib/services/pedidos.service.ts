@@ -61,7 +61,7 @@ export const pedidosService = {
           },
           _count: { select: { items: true, documents: true } },
         },
-        orderBy: { order_date: "desc" },
+        orderBy: [{ order_date: "desc" }],
         skip: (page - 1) * limit,
         take: limit,
       }),

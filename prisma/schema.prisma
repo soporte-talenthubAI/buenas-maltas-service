@@ -37,17 +37,19 @@ model Customer {
   id                    String   @id @default(cuid())
   code                  String   @unique
   commercial_name       String
+  razon_social          String?  // RAZON_SOCI
   contact_name          String?
   phone                 String?
   email                 String?
   cuit                  String?
-  iva_condition         String?
+  iva_condition         String?  // COD_CATEGORIA_IVA: RI, MO, CF, etc.
   // Address
   street                String
-  street_number         String
+  street_number         String   @default("")
   locality              String
   province              String   @default("Córdoba")
   postal_code           String?
+  delivery_address      String?  // DIR_COM (dirección comercial)
   // Coordinates (geocoded)
   latitude              Decimal? @db.Decimal(10, 8)
   longitude             Decimal? @db.Decimal(11, 8)
@@ -55,9 +57,15 @@ model Customer {
   has_time_restriction  Boolean  @default(false)
   delivery_window_start String?
   delivery_window_end   String?
+  horario_cobranza      String?  // HORARIO_COBRANZA
   // Classification
   customer_type         String   @default("minorista") // mayorista, minorista
-  sales_channel         String   @default("Sin especificar") // Bar / Restaurante, Tienda de bebidas A, etc.
+  sales_channel         String   @default("Sin especificar") // CA_1096_TIPO_DE_COMERCIO
+  // Tango fields
+  tango_id              Int?     @unique // ID_GVA14
+  condicion_venta       String?  // GVA01_DESC_COND
+  zona                  String?  // GVA05_DESCRIPCION
+  vendedor_cod          String?  // COD_GVA23 assigned vendedor
   // Status
   is_active             Boolean  @default(true)
   created_at            DateTime @default(now())
@@ -78,6 +86,16 @@ model Product {
   unit_price  Decimal  @db.Decimal(12, 2)
   cost_price  Decimal? @db.Decimal(12, 2)
   unit        String   @default("unidad") // unidad, litro, barril
+  // Tango fields
+  tango_id    Int?     @unique // ID_STA11
+  barcode     String?  // COD_BARRA
+  synonym     String?  // SINONIMO
+  familia     String?  // FAMILIA
+  grupo       String?  // GRUPO
+  has_stock   Boolean  @default(true) // STOCK
+  um_stock    String?  // MEDIDA_STOCK_CODIGO
+  um_ventas   String?  // MEDIDA_VENTAS_CODIGO
+  //
   is_active   Boolean  @default(true)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -97,13 +115,21 @@ model Order {
   subtotal      Decimal       @db.Decimal(12, 2)
   discount      Decimal       @default(0) @db.Decimal(5, 2)
   total         Decimal       @db.Decimal(12, 2)
-  payment_method String?       // Efectivo, Transferencia, etc.
-  order_type     String?       // web, presencial, telefono, whatsapp
-  observations   String?
+  payment_method  String?       // Efectivo, Transferencia, etc.
+  order_type      String?       // web, presencial, telefono, whatsapp
+  observations    String?
+  // Tango fields
+  vendedor_nombre String?       // NOMBRE_VEN
+  condicion_venta String?       // DESCRIPCION_CONDICION_VENTA
+  deposito        String?       // NOMBRE_SUC
+  lista_precio    String?       // NOMBRE_LIS
+  remito_nro      String?       // N_REMITO
+  moneda          String?       @default("$") // SIMBOLO_MONEDA
+  tango_estado    Int?          // ESTADO (1=pendiente, 2=parcial, 3=finalizado)
   // Data origin: manual, excel_import, tango
-  origin         String        @default("manual")
+  origin          String        @default("manual")
   // Tango sync
-  tango_id       String?       @unique
+  tango_id        String?       @unique
   // Relations
   created_by_id String
   created_by    User          @relation("created_by", fields: [created_by_id], references: [id])
@@ -131,14 +157,15 @@ enum OrderPriority {
 }
 
 model OrderItem {
-  id           String  @id @default(cuid())
-  order_id     String
-  order        Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  product_code String
-  product_name String
-  quantity     Decimal @db.Decimal(10, 2)
-  unit_price   Decimal @db.Decimal(12, 2)
-  subtotal     Decimal @db.Decimal(12, 2)
+  id               String  @id @default(cuid())
+  order_id         String
+  order            Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product_code     String
+  product_name     String
+  quantity         Decimal @db.Decimal(10, 2)
+  unit_price       Decimal @db.Decimal(12, 2)
+  discount_percent Decimal @default(0) @db.Decimal(5, 2) // PORCENTAJE_BONIFICACION
+  subtotal         Decimal @db.Decimal(12, 2)
 }
 
 // ─── DOCUMENTS ──────────────────────────────────────────────

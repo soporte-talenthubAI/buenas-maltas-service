@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Pencil, Trash2, RefreshCw, Package } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, RefreshCw, Package, Download, Loader2 } from "lucide-react";
 import { ProductFormModal } from "@/components/productos/product-form-modal";
 
 interface Product {
@@ -15,6 +15,13 @@ interface Product {
   cost_price: number | null;
   unit: string;
   is_active: boolean;
+  tango_id: number | null;
+  has_stock: boolean;
+  um_stock: string | null;
+  um_ventas: string | null;
+  barcode: string | null;
+  familia: string | null;
+  grupo: string | null;
 }
 
 export default function ProductosPage() {
@@ -25,6 +32,8 @@ export default function ProductosPage() {
   const [showForm, setShowForm] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -45,6 +54,25 @@ export default function ProductosPage() {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  const handleSyncTango = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/tango/sync-articulos", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setSyncResult(`Sincronizado: ${data.created} creados, ${data.updated} actualizados, ${data.skipped} omitidos (de ${data.totalFromTango} artículos)`);
+        fetchProducts();
+      } else {
+        setSyncResult(`Error: ${data.error}`);
+      }
+    } catch {
+      setSyncResult("Error de conexión con Tango");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleDelete = async (product: Product) => {
     if (!confirm(`¿Eliminar "${product.name}"? Se desactivará el producto.`)) return;
@@ -84,10 +112,27 @@ export default function ProductosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-black">Productos</h1>
-        <Button onClick={handleNew} className="bg-amber-600 hover:bg-amber-700 text-white">
-          <Plus className="w-4 h-4" /> Nuevo Producto
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleSyncTango}
+            disabled={syncing}
+          >
+            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Sincronizar Tango
+          </Button>
+          <Button onClick={handleNew} className="bg-amber-600 hover:bg-amber-700 text-white">
+            <Plus className="w-4 h-4" /> Nuevo Producto
+          </Button>
+        </div>
       </div>
+
+      {syncResult && (
+        <div className={`px-4 py-3 rounded-lg text-sm ${syncResult.startsWith("Error") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>
+          {syncResult}
+          <button onClick={() => setSyncResult(null)} className="ml-2 underline">cerrar</button>
+        </div>
+      )}
 
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-md">
@@ -120,12 +165,13 @@ export default function ProductosPage() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Código</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Nombre</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Descripción</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Marca</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Categoría</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Precio venta</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Precio costo</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Unidad</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">UM Ventas</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">UM Stock</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">Stock</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-600">Precio</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">Tango</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Estado</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Acciones</th>
               </tr>
@@ -133,13 +179,14 @@ export default function ProductosPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-gray-400">
+                  <td colSpan={10} className="text-center py-8 text-gray-400">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                     Cargando...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-gray-400">
+                  <td colSpan={10} className="text-center py-8 text-gray-400">
                     <Package className="w-8 h-8 mx-auto mb-2" />
                     No se encontraron productos
                   </td>
@@ -154,16 +201,27 @@ export default function ProductosPage() {
                         {p.brand}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 capitalize">{p.category}</td>
-                    <td className="px-4 py-3 text-right text-black">
-                      ${Number(p.unit_price).toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+                    <td className="px-4 py-3 text-gray-600 text-xs">{p.um_ventas || p.unit}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">{p.um_stock || "—"}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.has_stock ? "bg-blue-50 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                        {p.has_stock ? "Sí" : "No"}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-500">
-                      {p.cost_price
-                        ? `$${Number(p.cost_price).toLocaleString("es-AR", { minimumFractionDigits: 2 })}`
+                    <td className="px-4 py-3 text-right text-black">
+                      {Number(p.unit_price) > 0
+                        ? `$${Number(p.unit_price).toLocaleString("es-AR", { minimumFractionDigits: 2 })}`
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{p.unit}</td>
+                    <td className="px-4 py-3 text-center">
+                      {p.tango_id ? (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                          #{p.tango_id}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                         {p.is_active ? "Activo" : "Inactivo"}

@@ -54,14 +54,9 @@ export async function POST(request: NextRequest) {
 
     // Sync to Tango
     if (body.sync_tango) {
-      await tangoService.syncProduct({
-        code: product.code,
-        name: product.name,
-        brand: product.brand,
-        category: product.category,
-        unit_price: Number(product.unit_price),
-        cost_price: product.cost_price ? Number(product.cost_price) : undefined,
-        unit: product.unit,
+      await tangoService.createArticulo({
+        COD_STA11: product.code,
+        DESCRIPCIO: product.name,
       });
     }
 
