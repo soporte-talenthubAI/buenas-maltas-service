@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loading } from "@/components/analytics/shared/loading";
 import { YearSelector } from "@/components/analytics/shared/year-selector";
 import { MonthTable } from "@/components/analytics/shared/month-table";
+import { Search, X } from "lucide-react";
 
 interface ClientRevenueRow {
   client: string;
@@ -94,6 +95,8 @@ export function ClientesTab({ origin = "all" }: { origin?: string }) {
   const [data, setData] = useState<ClientesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [subTab, setSubTab] = useState<SubTab>("facturacion");
+  const [clientFilter, setClientFilter] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -114,8 +117,61 @@ export function ClientesTab({ origin = "all" }: { origin?: string }) {
     fetchData();
   }, [fetchData]);
 
+  // Get unique client names for autocomplete
+  const allClientNames = useMemo(() => {
+    if (!data) return [];
+    return data.revenueByClient.map((c) => c.client).sort();
+  }, [data]);
+
+  // Filter suggestions based on input
+  const filteredSuggestions = useMemo(() => {
+    if (!clientFilter.trim()) return [];
+    const q = clientFilter.toLowerCase();
+    return allClientNames.filter((name) => name.toLowerCase().includes(q)).slice(0, 10);
+  }, [clientFilter, allClientNames]);
+
+  // Apply client filter to all data
+  const filteredData = useMemo(() => {
+    if (!data) return null;
+    if (!clientFilter.trim()) return data;
+
+    const q = clientFilter.toLowerCase();
+    const matchClient = (name: string) => name.toLowerCase().includes(q);
+
+    const revenueByClient = data.revenueByClient.filter((c) => matchClient(c.client));
+
+    // Recalculate pareto with filtered clients
+    const sortedClients = [...revenueByClient].sort((a, b) => b.total - a.total);
+    const grandTotal = sortedClients.reduce((s, c) => s + c.total, 0);
+    let cumulative = 0;
+    const paretoData = sortedClients.map((c) => {
+      cumulative += c.total;
+      return {
+        client: c.client,
+        revenue: c.total,
+        cumulativePercent: grandTotal > 0 ? (cumulative / grandTotal) * 100 : 0,
+      };
+    });
+
+    const clientsByBrand: Record<string, ClientBrandRow[]> = {};
+    for (const [brand, rows] of Object.entries(data.clientsByBrand)) {
+      clientsByBrand[brand] = rows.filter((c) => matchClient(c.client));
+    }
+
+    const barrilesByClient = data.barrilesByClient.filter((c) => matchClient(c.client));
+
+    // Channel breakdown: keep as-is (doesn't filter by individual client)
+    return {
+      ...data,
+      revenueByClient,
+      paretoData,
+      clientsByBrand,
+      barrilesByClient,
+    };
+  }, [data, clientFilter]);
+
   if (loading) return <Loading />;
-  if (!data) return <p className="text-black">No se encontraron datos.</p>;
+  if (!filteredData) return <p className="text-black">No se encontraron datos.</p>;
 
   const {
     revenueByClient,
@@ -124,7 +180,7 @@ export function ClientesTab({ origin = "all" }: { origin?: string }) {
     barrilesByClient,
     clientTypeBreakdown,
     monthKeys,
-  } = data;
+  } = filteredData;
 
   const top15 = [...revenueByClient]
     .sort((a, b) => b.total - a.total)
@@ -135,7 +191,52 @@ export function ClientesTab({ origin = "all" }: { origin?: string }) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h2 className="text-xl font-bold text-black">Clientes</h2>
-        <YearSelector year={year} onChange={setYear} />
+        <div className="flex items-center gap-3">
+          {/* Client search filter */}
+          <div className="relative">
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
+              <Search className="w-4 h-4 text-gray-400 ml-3" />
+              <input
+                type="text"
+                value={clientFilter}
+                onChange={(e) => {
+                  setClientFilter(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => setShowDropdown(true)}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                placeholder="Filtrar cliente..."
+                className="px-2 py-1.5 text-sm text-black w-48 focus:outline-none"
+              />
+              {clientFilter && (
+                <button
+                  onClick={() => { setClientFilter(""); setShowDropdown(false); }}
+                  className="px-2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {/* Autocomplete dropdown */}
+            {showDropdown && filteredSuggestions.length > 0 && (
+              <div className="absolute z-10 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {filteredSuggestions.map((name) => (
+                  <button
+                    key={name}
+                    onMouseDown={() => {
+                      setClientFilter(name);
+                      setShowDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-sm text-black hover:bg-amber-50 truncate"
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <YearSelector year={year} onChange={setYear} />
+        </div>
       </div>
 
       {/* Sub-tabs */}
