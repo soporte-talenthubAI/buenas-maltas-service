@@ -243,15 +243,85 @@ async function main() {
   }
   console.log(`  Pedidos: ${ordCreated} creados, ${ordUpdated} actualizados, ${ordSkipped} omitidos`);
 
+  // ─── SYNC PEDIDO ITEMS (RENGLONES) ──────────────────────
+  console.log("\nSincronizando renglones de pedidos...");
+  const ordersWithoutItems = await prisma.order.findMany({
+    where: { origin: "tango", tango_id: { not: null }, items: { none: {} } },
+    select: { id: true, tango_id: true, order_number: true },
+    take: 500,
+  });
+  console.log(`  ${ordersWithoutItems.length} pedidos sin items`);
+
+  let itemsCreated = 0, itemsErrors = 0;
+  for (let i = 0; i < ordersWithoutItems.length; i++) {
+    const order = ordersWithoutItems[i];
+    const tangoIdNum = parseInt(order.tango_id!, 10);
+    if (isNaN(tangoIdNum)) continue;
+
+    try {
+      const url = `${TANGO_URL}/api/GetById?process=19845&id=${tangoIdNum}&view=`;
+      const res = await fetch(url, { headers });
+      if (!res.ok) { itemsErrors++; continue; }
+      const data = await res.json();
+
+      const pedidoDetail = data?.resultData || data;
+      const renglones: Record<string, unknown>[] =
+        (pedidoDetail?.Renglones || pedidoDetail?.renglones || pedidoDetail?.RENGLONES ||
+         pedidoDetail?.Items || pedidoDetail?.items || pedidoDetail?.Detalle ||
+         pedidoDetail?.detalle || []) as Record<string, unknown>[];
+
+      if (renglones.length === 0) {
+        if (i < 3) {
+          const keys = Object.keys(pedidoDetail || {});
+          console.log(`  [debug] Pedido ${order.order_number}: sin renglones. Keys: ${keys.join(", ")}`);
+        }
+        continue;
+      }
+
+      for (const renglon of renglones) {
+        const productCode = String(renglon.COD_ARTICU || "").trim();
+        const productName = String(renglon.DESCRIPCION_ARTICULO || renglon.DESCRIPCIO || productCode || "").trim();
+        const quantity = Math.abs(Number(renglon.CANTIDAD || 0));
+        const unitPrice = Number(renglon.PRECIO || 0);
+        const subtotal = Math.abs(Number(renglon.IMPORTE || quantity * unitPrice));
+        const discountPercent = Number(renglon.PORCENTAJE_BONIFICACION || renglon.PORC_BONIF || 0);
+
+        if ((!productCode && !productName) || quantity === 0) continue;
+
+        await prisma.orderItem.create({
+          data: {
+            order_id: order.id,
+            product_code: productCode,
+            product_name: productName,
+            quantity,
+            unit_price: unitPrice,
+            discount_percent: discountPercent,
+            subtotal,
+          },
+        });
+        itemsCreated++;
+      }
+
+      if ((i + 1) % 100 === 0) console.log(`  Procesados ${i + 1}/${ordersWithoutItems.length}...`);
+    } catch (e) {
+      itemsErrors++;
+      if (itemsErrors <= 3) console.log(`  [error] ${order.order_number}: ${(e as Error).message}`);
+    }
+  }
+  console.log(`  Items: ${itemsCreated} creados, ${itemsErrors} errores`);
+
   // Summary
   const totalCustomers = await prisma.customer.count();
   const totalProducts = await prisma.product.count();
   const totalOrders = await prisma.order.count();
 
+  const totalItems = await prisma.orderItem.count();
+
   console.log("\n=== Resumen DB ===");
   console.log(`Clientes: ${totalCustomers}`);
   console.log(`Productos: ${totalProducts}`);
   console.log(`Pedidos: ${totalOrders}`);
+  console.log(`Items: ${totalItems}`);
   console.log("\nSincronización completada!");
 }
 

@@ -19,22 +19,21 @@ interface TangoPedidoRaw {
   NOMBRE_LIS: string;
   N_REMITO: string | null;
   SIMBOLO_MONEDA: string;
-  COD_DIRECCION_ENTREGA: string | null;
+  PORC_DESC: number;
   [key: string]: unknown;
 }
 
 const TANGO_STATUS_MAP: Record<number, string> = {
   1: "pendiente",
-  2: "confirmado",  // parcial
-  3: "entregado",   // finalizado
+  2: "confirmado",
+  3: "entregado",
 };
 
 export async function POST(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const maxPages = parseInt(searchParams.get("maxPages") || "20", 10);
+    const maxPages = parseInt(searchParams.get("maxPages") || "200", 10);
 
-    // Get a system user for created_by
     const systemUser = await prisma.user.findFirst({ where: { role: "admin" } });
     if (!systemUser) {
       return NextResponse.json({ error: "No hay usuario admin para asignar pedidos" }, { status: 400 });
@@ -57,7 +56,7 @@ export async function POST(request: NextRequest) {
       if (!nroPedido) { errors++; continue; }
 
       // Skip if already imported
-      const existing = await prisma.order.findUnique({ where: { tango_id: tangoId } });
+      const existing = await prisma.order.findFirst({ where: { tango_id: tangoId } });
       if (existing) { skippedExisting++; continue; }
 
       // Find customer by code
@@ -66,13 +65,13 @@ export async function POST(request: NextRequest) {
         ? await prisma.customer.findUnique({ where: { code: customerCode } })
         : null;
 
-      // If no customer, try to create a minimal one
       if (!customer && customerCode) {
         customer = await prisma.customer.create({
           data: {
             code: customerCode,
             commercial_name: ped.RAZON_SOCIAL_CLIENTE?.trim() || customerCode,
             street: "",
+            street_number: "",
             locality: "Sin especificar",
           },
         });
@@ -80,23 +79,20 @@ export async function POST(request: NextRequest) {
 
       if (!customer) { skippedNoCustomer++; continue; }
 
-      const total = ped.TOTAL || ped.TOTAL_PEDI || 0;
+      const total = ped.TOTAL_PEDI || ped.TOTAL || 0;
       const estado = TANGO_STATUS_MAP[ped.ESTADO] || "pendiente";
 
       try {
-        // Get detail with items
-        const detailRes = await tangoService.getArticuloById(0); // placeholder
-        // We'll use the list data for now since GetById for pedidos needs different handling
-        void detailRes;
-
         await prisma.order.create({
           data: {
             order_number: `TANGO-${nroPedido.replace(/\s/g, "")}`,
-            customer_id: customer.id,
+            customer: { connect: { id: customer.id } },
+            created_by: { connect: { id: systemUser.id } },
             order_date: new Date(ped.FECHA_PEDI),
             delivery_date: ped.FECHA_ENTR ? new Date(ped.FECHA_ENTR) : null,
             status: estado as "pendiente" | "confirmado" | "entregado",
             subtotal: total,
+            discount: Number(ped.PORC_DESC || 0),
             total: total,
             origin: "tango",
             tango_id: tangoId,
@@ -107,7 +103,6 @@ export async function POST(request: NextRequest) {
             lista_precio: ped.NOMBRE_LIS?.trim() || null,
             remito_nro: ped.N_REMITO?.trim() || null,
             moneda: ped.SIMBOLO_MONEDA?.trim() || "$",
-            created_by_id: systemUser.id,
           },
         });
         created++;

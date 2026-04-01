@@ -219,6 +219,14 @@ export const tangoService = {
     );
   },
 
+  async getPedidoById(id: number) {
+    return tangoFetch<Record<string, unknown>>(
+      "GetById",
+      TANGO_PROCESS.PEDIDOS,
+      { view: "", id: String(id) }
+    );
+  },
+
   async createPedido(data: Record<string, unknown>) {
     return tangoFetch<unknown>("Create", TANGO_PROCESS.PEDIDOS, {}, {
       method: "POST",

@@ -27,14 +27,26 @@ export default function PedidosPage() {
       await fetch("/api/tango/sync-clientes", { method: "POST" });
       const res = await fetch("/api/tango/sync-pedidos", { method: "POST" });
       const data = await res.json();
-      if (data.success) {
-        setSyncResult(
-          `Sincronizado: ${data.created} creados, ${data.skippedExisting} ya existían, ${data.skippedNoCustomer} sin cliente (de ${data.totalFromTango} pedidos)`
-        );
-        setRefreshKey((k) => k + 1);
-      } else {
+      if (!data.success) {
         setSyncResult(`Error: ${data.error}`);
+        return;
       }
+
+      let msg = `Pedidos: ${data.created} creados, ${data.skippedExisting} existentes (de ${data.totalFromTango})`;
+
+      // Now sync line items for orders without items
+      try {
+        const itemsRes = await fetch("/api/tango/sync-pedido-items?limit=200", { method: "POST" });
+        const itemsData = await itemsRes.json();
+        if (itemsData.success && itemsData.itemsCreated > 0) {
+          msg += ` | Items: ${itemsData.itemsCreated} creados en ${itemsData.processed} pedidos`;
+        }
+      } catch {
+        // Items sync is optional, don't fail the whole operation
+      }
+
+      setSyncResult(msg);
+      setRefreshKey((k) => k + 1);
     } catch {
       setSyncResult("Error de conexión con Tango");
     } finally {
