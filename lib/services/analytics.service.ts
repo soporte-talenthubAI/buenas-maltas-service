@@ -1206,6 +1206,182 @@ export const analyticsService = {
     return { vendedores, years };
   },
 
+  // ─── VENDEDORES VISIT / CONVERSION ANALYTICS ──────────────────────
+  async getVendedoresVisitAnalytics(year?: number) {
+    const yearFilter = year || new Date().getFullYear();
+    const startDate = new Date(yearFilter, 0, 1);
+    const endDate = new Date(yearFilter, 11, 31, 23, 59, 59);
+
+    // Get all Tango orders with vendedor and customer info
+    const orders = await prisma.order.findMany({
+      where: {
+        origin: "tango",
+        vendedor_nombre: { not: null },
+        order_date: { gte: startDate, lte: endDate },
+        status: { not: "cancelado" },
+      },
+      select: {
+        vendedor_nombre: true,
+        customer_id: true,
+        total: true,
+        customer: {
+          select: {
+            id: true,
+            commercial_name: true,
+            locality: true,
+            sales_channel: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+      },
+    });
+
+    // Get ALL customers and identify which ones have orders (real vs potencial)
+    const allCustomers = await prisma.customer.findMany({
+      select: {
+        id: true,
+        commercial_name: true,
+        locality: true,
+        sales_channel: true,
+        latitude: true,
+        longitude: true,
+      },
+    });
+
+    const customerOrderCounts = await prisma.order.groupBy({
+      by: ["customer_id"],
+      _count: true,
+    });
+    const orderCountMap = new Map(customerOrderCounts.map(c => [c.customer_id, c._count]));
+
+    // Classify customers
+    const realCustomerIds = new Set<string>();
+    const potencialCustomerIds = new Set<string>();
+    for (const c of allCustomers) {
+      if ((orderCountMap.get(c.id) || 0) > 0) {
+        realCustomerIds.add(c.id);
+      } else {
+        potencialCustomerIds.add(c.id);
+      }
+    }
+
+    // Build vendedor → customers map from orders
+    const vendedorCustomers: Record<string, Set<string>> = {};
+    const vendedorRevenue: Record<string, number> = {};
+    const vendedorOrders: Record<string, number> = {};
+
+    for (const order of orders) {
+      const v = order.vendedor_nombre!;
+      if (!vendedorCustomers[v]) {
+        vendedorCustomers[v] = new Set();
+        vendedorRevenue[v] = 0;
+        vendedorOrders[v] = 0;
+      }
+      vendedorCustomers[v].add(order.customer_id);
+      vendedorRevenue[v] += Number(order.total);
+      vendedorOrders[v] += 1;
+    }
+
+    // Build vendedor details with customer classification
+    const vendedorDetails = Object.entries(vendedorCustomers)
+      .map(([name, customerIds]) => {
+        const realCount = [...customerIds].filter(id => realCustomerIds.has(id)).length;
+        const potencialCount = [...customerIds].filter(id => potencialCustomerIds.has(id)).length;
+
+        // Localities heatmap for this vendedor
+        const localityMap: Record<string, { count: number; revenue: number; real: number; potencial: number }> = {};
+        for (const order of orders) {
+          if (order.vendedor_nombre !== name) continue;
+          const loc = order.customer.locality || "Sin especificar";
+          if (!localityMap[loc]) localityMap[loc] = { count: 0, revenue: 0, real: 0, potencial: 0 };
+          localityMap[loc].count += 1;
+          localityMap[loc].revenue += Number(order.total);
+          if (realCustomerIds.has(order.customer_id)) localityMap[loc].real += 1;
+          else localityMap[loc].potencial += 1;
+        }
+
+        const localities = Object.entries(localityMap)
+          .map(([locality, data]) => ({ locality, ...data }))
+          .sort((a, b) => b.revenue - a.revenue);
+
+        // Customer list
+        const customerList = [...customerIds].map(id => {
+          const c = allCustomers.find(c2 => c2.id === id);
+          const isReal = realCustomerIds.has(id);
+          const custOrders = orders.filter(o => o.customer_id === id && o.vendedor_nombre === name);
+          return {
+            name: c?.commercial_name || "Desconocido",
+            locality: c?.locality || "Sin especificar",
+            channel: c?.sales_channel || "Sin especificar",
+            isReal,
+            orders: custOrders.length,
+            revenue: custOrders.reduce((s, o) => s + Number(o.total), 0),
+            hasCoords: c?.latitude != null && c?.longitude != null,
+          };
+        }).sort((a, b) => b.revenue - a.revenue);
+
+        return {
+          name,
+          totalClientes: customerIds.size,
+          realClientes: realCount,
+          potencialClientes: potencialCount,
+          conversionRate: customerIds.size > 0 ? (realCount / customerIds.size) * 100 : 0,
+          revenue: vendedorRevenue[name],
+          orders: vendedorOrders[name],
+          localities,
+          customers: customerList,
+        };
+      })
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // Global heatmap by locality (all vendedores)
+    const globalLocality: Record<string, { locality: string; orders: number; revenue: number; vendedores: Set<string>; realClientes: Set<string>; potencialClientes: Set<string> }> = {};
+    for (const order of orders) {
+      const loc = order.customer.locality || "Sin especificar";
+      if (!globalLocality[loc]) {
+        globalLocality[loc] = { locality: loc, orders: 0, revenue: 0, vendedores: new Set(), realClientes: new Set(), potencialClientes: new Set() };
+      }
+      globalLocality[loc].orders += 1;
+      globalLocality[loc].revenue += Number(order.total);
+      globalLocality[loc].vendedores.add(order.vendedor_nombre!);
+      if (realCustomerIds.has(order.customer_id)) {
+        globalLocality[loc].realClientes.add(order.customer_id);
+      } else {
+        globalLocality[loc].potencialClientes.add(order.customer_id);
+      }
+    }
+
+    const heatmapData = Object.values(globalLocality)
+      .map(loc => ({
+        locality: loc.locality,
+        orders: loc.orders,
+        revenue: loc.revenue,
+        vendedores: loc.vendedores.size,
+        vendedorNames: [...loc.vendedores],
+        realClientes: loc.realClientes.size,
+        potencialClientes: loc.potencialClientes.size,
+      }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // Global conversion
+    const totalReal = realCustomerIds.size;
+    const totalPotencial = potencialCustomerIds.size;
+    const totalCustomers = allCustomers.length;
+
+    return {
+      vendedores: vendedorDetails,
+      heatmapData,
+      conversion: {
+        totalCustomers,
+        realClientes: totalReal,
+        potencialClientes: totalPotencial,
+        conversionRate: totalCustomers > 0 ? (totalReal / totalCustomers) * 100 : 0,
+      },
+      year: yearFilter,
+    };
+  },
+
   // ─── DESCUENTOS ANALYTICS ─────────────────────────────────────────
   async getDescuentosAnalytics(year: number, origin?: string) {
     const startDate = new Date(year, 0, 1);
